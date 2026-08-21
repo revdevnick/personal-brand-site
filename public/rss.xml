@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Nick Perkins — Pastor, Writer, Builder</title>
+    <link>http://localhost:3000</link>
+    <description>A doorway to the Word, to Jesus, and to technical work in His service.</description>
+    <item>
+      <title>The problems I cannot compile</title>
+      <link>http://localhost:3000/sermons/2026-04-12-the-problems-i-cannot-compile/</link>
+      <guid>http://localhost:3000/sermons/2026-04-12-the-problems-i-cannot-compile/</guid>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 GMT</pubDate>
+      <description>Some problems take code. The deepest ones take Jesus.</description>
+    </item>
+    <item>
+      <title>I am not Mr. Fix-It</title>
+      <link>http://localhost:3000/writing/2026-04-20-i-am-not-mr-fix-it/</link>
+      <guid>http://localhost:3000/writing/2026-04-20-i-am-not-mr-fix-it/</guid>
+      <pubDate>Mon, 20 Apr 2026 00:00:00 GMT</pubDate>
+      <description>I love solving problems. That is not the same as being the one who saves.</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,14 @@
+.git
+.gitignore
+.next
+out
+node_modules
+npm-debug.log*
+README.md
+*.md
+!content/**/*.mdx
+.env
+.env.*
+!.env.example
+.DS_Store
+agent-transcripts
