@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Instrument_Serif, Source_Serif_4 } from "next/font/google";
+import Script from "next/script";
+import { Geist, Geist_Mono, Instrument_Serif, Noto_Serif_Devanagari, Noto_Serif_SC, Noto_Serif_Thai, Source_Serif_4 } from "next/font/google";
 import { JsonLd } from "@/components/JsonLd";
 import { SiteShell } from "@/components/SiteShell";
 import { personJsonLd, site } from "@/lib/site";
@@ -24,6 +25,24 @@ const display = Instrument_Serif({
 const body = Source_Serif_4({
   variable: "--font-body",
   subsets: ["latin"],
+});
+
+const zh = Noto_Serif_SC({
+  variable: "--font-zh",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const hi = Noto_Serif_Devanagari({
+  variable: "--font-hi",
+  subsets: ["devanagari", "latin"],
+  weight: "400",
+});
+
+const th = Noto_Serif_Thai({
+  variable: "--font-th",
+  subsets: ["thai", "latin"],
+  weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -66,9 +85,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geist.variable} ${geistMono.variable} ${display.variable} ${body.variable} min-h-svh antialiased`}
+      className={`${geist.variable} ${geistMono.variable} ${display.variable} ${body.variable} ${zh.variable} ${hi.variable} ${th.variable} min-h-svh antialiased`}
     >
       <body className="flex min-h-svh flex-col">
+        <Script id="home-scroll-pin" strategy="beforeInteractive">
+          {`(function(){try{var p=location.pathname;if(p==="/"||p===""){if("scrollRestoration"in history)history.scrollRestoration="manual";window.scrollTo(0,0);}}catch(e){}})();`}
+        </Script>
         <JsonLd data={personJsonLd()} />
         <SiteShell>{children}</SiteShell>
       </body>

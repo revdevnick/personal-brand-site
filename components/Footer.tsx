@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SocialLinks } from "@/components/SocialLinks";
 import { site } from "@/lib/site";
 
 export function Footer() {
@@ -12,28 +13,31 @@ export function Footer() {
             problems of various kinds.
           </p>
         </div>
-        <ul className="flex flex-col gap-2 sm:text-right">
-          <li>
-            <Link className="hover:text-accent" href={site.church.url}>
-              {site.church.name}
-            </Link>
-          </li>
-          <li>
-            <Link className="hover:text-accent" href={site.storyRocket.url}>
-              {site.storyRocket.name}
-            </Link>
-          </li>
-          <li>
-            <Link className="hover:text-accent" href={site.linkedin}>
-              LinkedIn
-            </Link>
-          </li>
-          <li>
-            <Link className="hover:text-accent" href="/contact/">
-              Contact
-            </Link>
-          </li>
-        </ul>
+        <div className="flex flex-col gap-4 sm:items-end">
+          <SocialLinks />
+          <ul className="flex flex-col gap-2 sm:text-right">
+            <li>
+              <Link className="hover:text-accent" href={site.church.url}>
+                {site.church.name}
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:text-accent" href={site.storyRocket.url}>
+                {site.storyRocket.name}
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:text-accent" href={site.linkedin}>
+                LinkedIn
+              </Link>
+            </li>
+            <li>
+              <Link className="hover:text-accent" href="/contact/">
+                Contact
+              </Link>
+            </li>
+          </ul>
+        </div>
       </div>
     </footer>
   );

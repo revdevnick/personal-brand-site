@@ -17,11 +17,25 @@ export const site = {
   },
   linkedin: "https://www.linkedin.com/in/nick-perkins/",
   github: "https://github.com/revdevnick",
+  githubAlt: "https://github.com/nickprkins",
+  twitter: "https://twitter.com/revdevnick",
+  instagram: "https://instagram.com/revdevnick",
   line: "I love solving problems. Some of them take code. The deepest ones take Jesus.",
 } as const;
 
+export const socials = [
+  { href: site.linkedin, label: "LinkedIn", icon: "linkedin" },
+  { href: site.github, label: "GitHub @revdevnick", icon: "github" },
+  { href: site.githubAlt, label: "GitHub @nickprkins", icon: "github" },
+  { href: site.twitter, label: "Twitter @revdevnick", icon: "twitter" },
+  { href: site.instagram, label: "Instagram @revdevnick", icon: "instagram" },
+] as const;
+
 export const sameAs = [
   site.github,
+  site.githubAlt,
+  site.twitter,
+  site.instagram,
   site.linkedin,
   site.storyRocket.url,
   site.church.staffUrl,

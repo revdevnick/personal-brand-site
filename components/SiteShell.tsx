@@ -16,6 +16,26 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
   const scheme = isHome ? "dark" : "light";
 
   useLayoutEffect(() => {
+    if (!isHome) {
+      if ("scrollRestoration" in history) history.scrollRestoration = "auto";
+      return;
+    }
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    const pinTop = () => window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    pinTop();
+    const raf = window.requestAnimationFrame(pinTop);
+    const onPageShow = () => pinTop();
+    const onLoad = () => pinTop();
+    window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("load", onLoad);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("load", onLoad);
+    };
+  }, [isHome]);
+
+  useLayoutEffect(() => {
     const root = document.documentElement;
     root.style.backgroundColor = chrome;
     root.style.colorScheme = scheme;
@@ -55,7 +75,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
       </a>
       <Header />
       {!isHome ? (
-        <div className="h-[var(--site-header)] shrink-0" aria-hidden />
+        <div className="h-[var(--site-header)] shrink-0 site-header-spacer" aria-hidden />
       ) : null}
       <main id="content" className="flex-1">
         {children}

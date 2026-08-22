@@ -101,10 +101,18 @@ export function Header() {
             : "border-ink/10 bg-study/85 text-ink"
         }`}
       >
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 overflow-visible px-5 py-5 sm:px-6">
-          <Link href="/" className="group min-w-0 overflow-visible" aria-label="Home" onClick={() => setOpen(false)}>
-            <BrandLockup />
-          </Link>
+        <div className="site-header-bar mx-auto flex max-w-6xl items-center justify-between gap-4 overflow-visible px-5 py-5 sm:px-6">
+        <BrandLockup
+          homeHref="/"
+          homeLabel={isHome ? "Back to top" : "Home"}
+          onHomeClick={(event) => {
+            setOpen(false);
+            if (!isHome) return;
+            event.preventDefault();
+            window.scrollTo(0, 0);
+            window.dispatchEvent(new Event("nh:replay-home"));
+          }}
+        />
 
           <nav
             ref={navRef}
