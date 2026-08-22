@@ -50,6 +50,7 @@ export const MARKS: readonly [number, number][] = [
   [-79.8, 36.0],
   [-78.8, 36.0],
   [-78.8, 36.2],
+  [-78.9, 36.3],
   [-77.8, 35.9],
   [-76.0, 36.8],
   [-105.2, 39.0],
@@ -100,3 +101,8 @@ export const MARKS: readonly [number, number][] = [
   [36.8, -1.2],
   [39.0, -6.9],
 ];
+
+/** Idle route starts here, then turns east across the water. */
+export const TRAVEL_ORIGIN: readonly [number, number] = [-78.9, 36.3];
+export const TRAVEL_TURN: readonly [number, number] = [-0.2, 51.6];
+export const TRAVEL_PACIFIC: readonly [number, number] = [-122.4, 37.8];

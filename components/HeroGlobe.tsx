@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { MARKS } from "@/lib/marks";
+import { MARKS, TRAVEL_ORIGIN, TRAVEL_PACIFIC, TRAVEL_TURN } from "@/lib/marks";
+import { TRAIL_CAP, buildRoute, fillTrail } from "@/lib/travel";
 
 const MARK_CAP = 128;
 
@@ -20,6 +21,7 @@ uniform vec2 u_res;
 uniform float u_rot;
 uniform float u_markAlpha;
 uniform vec2 u_pts[${MARK_CAP}];
+uniform vec4 u_trail[${TRAIL_CAP}];
 uniform vec3 u_light;
 
 const float PI = 3.14159265359;
@@ -66,8 +68,44 @@ void main() {
   vec3 lineCol = vec3(0.62, 0.59, 0.52);
   vec3 color = base + lineCol * line * mix(0.08, 0.38, day);
 
-  float period = 0.0;
   float pxScale = min(u_res.x, u_res.y) * 0.5;
+  float ribbon = 0.0;
+  float comet = 0.0;
+  vec3 prevMv = vec3(0.0);
+  float prevW = 0.0;
+  for (int i = 0; i < ${TRAIL_CAP}; i++) {
+    vec4 s = u_trail[i];
+    if (s.w < 0.02) {
+      prevW = 0.0;
+      continue;
+    }
+    vec3 mv = rotX(-0.21) * rotY(u_rot) * s.xyz;
+    if (mv.z < 0.12) {
+      prevW = 0.0;
+      continue;
+    }
+    float facing = smoothstep(0.12, 0.9, mv.z);
+    float rad = mix(0.45, 1.9, s.w) * mix(0.55, 1.0, facing);
+    float px = length(p - mv.xy) * pxScale;
+    ribbon = max(ribbon, (1.0 - smoothstep(rad * 0.5, rad, px)) * s.w * facing);
+    if (i == 0) {
+      comet = max(comet, (1.0 - smoothstep(1.1, 2.8, px)) * facing);
+    }
+    if (prevW > 0.02 && prevMv.z > 0.12) {
+      vec2 ab = mv.xy - prevMv.xy;
+      float ab2 = dot(ab, ab);
+      if (ab2 > 0.0000002 && ab2 < 0.12) {
+        float h = clamp(dot(p - prevMv.xy, ab) / ab2, 0.0, 1.0);
+        float seg = length(p - prevMv.xy - ab * h) * pxScale;
+        float lw = mix(0.4, 1.55, 0.5 * (s.w + prevW)) * mix(0.5, 1.0, min(facing, smoothstep(0.12, 0.9, prevMv.z)));
+        ribbon = max(ribbon, (1.0 - smoothstep(lw * 0.35, lw, seg)) * 0.5 * (s.w + prevW));
+      }
+    }
+    prevMv = mv;
+    prevW = s.w;
+  }
+
+  float period = 0.0;
   for (int i = 0; i < ${MARK_CAP}; i++) {
     vec2 ml = u_pts[i];
     if (ml.x < 9.0) {
@@ -85,6 +123,12 @@ void main() {
   }
   vec3 periodCol = vec3(0.957, 0.937, 0.894);
   color = mix(color, periodCol, period * u_markAlpha * mix(0.55, 1.0, day));
+
+  vec3 trailCol = vec3(0.93, 0.78, 0.5);
+  vec3 headCol = vec3(1.0, 0.94, 0.8);
+  float lit = mix(0.42, 1.0, day);
+  color = mix(color, trailCol, ribbon * u_markAlpha * lit * 0.85);
+  color = mix(color, headCol, comet * u_markAlpha * lit);
 
   color += vec3(0.55, 0.68, 0.98) * fresnel * 0.2;
   color += vec3(0.92, 0.58, 0.32) * terminator * 0.1;
@@ -211,6 +255,7 @@ function compile(gl: WebGLRenderingContext, type: number, source: string) {
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
   if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.warn(gl.getShaderInfoLog(shader));
     gl.deleteShader(shader);
     return null;
   }
@@ -259,6 +304,7 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
     const uRot = gl.getUniformLocation(program, "u_rot");
     const uMarkAlpha = gl.getUniformLocation(program, "u_markAlpha");
     const uLight = gl.getUniformLocation(program, "u_light");
+    const trailLoc = gl.getUniformLocation(program, "u_trail[0]") ?? gl.getUniformLocation(program, "u_trail");
     gl.uniform1i(uMap, 0);
     gl.uniform3f(uLight, -0.42, 0.48, 0.76);
 
@@ -271,6 +317,9 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
     const ptsLoc = gl.getUniformLocation(program, "u_pts[0]") ?? gl.getUniformLocation(program, "u_pts");
     if (ptsLoc) gl.uniform2fv(ptsLoc, pts);
 
+    const route = buildRoute(MARKS, TRAVEL_ORIGIN, TRAVEL_TURN, TRAVEL_PACIFIC);
+    const trail = new Float32Array(TRAIL_CAP * 4);
+
     const placeholder = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, placeholder);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, 1, 1, 0, gl.RGB, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0]));
@@ -282,6 +331,8 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
 
     let mapTex = placeholder;
     let markAlpha = 0;
+    let travelTime = 0;
+    let lastNow = 0;
     let alive = true;
     let playing = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
@@ -297,14 +348,24 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
       }
     };
 
-    const draw = (rot: number) => {
+    const draw = (rot: number, now: number) => {
       fit();
       const target = marksOnRef.current ? 1 : 0;
       markAlpha += (target - markAlpha) * 0.055;
+      const dt = lastNow ? Math.min(0.05, (now - lastNow) / 1000) : 0;
+      lastNow = now;
+      if (!marksOnRef.current || markAlpha < 0.62) {
+        travelTime = 0;
+        trail.fill(0);
+      } else if (playing) {
+        travelTime += dt;
+        fillTrail(route, travelTime, trail);
+      }
       gl.clear(gl.COLOR_BUFFER_BIT);
       gl.uniform2f(uRes, canvas.width, canvas.height);
       gl.uniform1f(uRot, rot);
       gl.uniform1f(uMarkAlpha, markAlpha);
+      if (trailLoc) gl.uniform4fv(trailLoc, trail);
       gl.bindTexture(gl.TEXTURE_2D, mapTex);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
@@ -312,7 +373,7 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
     const tick = (now: number) => {
       if (!alive) return;
       const rot = START_ROT + ((now / 1000) * Math.PI * 2) / SPIN_SECONDS;
-      draw(rot);
+      draw(rot, now);
       if (playing && !document.hidden) raf = requestAnimationFrame(tick);
     };
 
@@ -329,7 +390,7 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
           return;
         }
         mapTex = texture;
-        if (!playing) draw(START_ROT);
+        if (!playing) draw(START_ROT, 0);
       })
       .catch(() => undefined);
 
@@ -339,7 +400,7 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
     ro.observe(canvas);
     fit();
     if (playing) raf = requestAnimationFrame(tick);
-    else draw(START_ROT);
+    else draw(START_ROT, 0);
 
     return () => {
       alive = false;
