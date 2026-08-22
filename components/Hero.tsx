@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExter
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { InlineSvg } from "./InlineSvg";
+import { HeroGlobe } from "./HeroGlobe";
 import { Logo } from "./Logo";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -71,8 +72,6 @@ const HERO_STARS = [
 
 const STAR_TINTS = ["", "is-cool", "is-warm"] as const;
 
-const STARLINK_SATS = 11;
-
 function useMediaQuery(query: string) {
   return useSyncExternalStore(
     (onChange) => {
@@ -137,6 +136,7 @@ export function Hero() {
   const [headReady, setHeadReady] = useState(false);
   const [bookReady, setBookReady] = useState(false);
   const [replay, setReplay] = useState(0);
+  const [marksOn, setMarksOn] = useState(false);
 
   const onHeadReady = useCallback((svg: SVGSVGElement) => {
     headSvg.current = svg;
@@ -452,6 +452,7 @@ export function Hero() {
 
     let breath: gsap.core.Timeline | null = null;
     let loveSwap: gsap.core.Timeline | null = null;
+    let markReveal: gsap.core.Timeline | null = null;
     let introDone = false;
     let idleOn = false;
     const word = () => stage.querySelector<HTMLElement>("[data-emphasis]");
@@ -572,6 +573,20 @@ export function Hero() {
     const stopIdle = () => {
       if (!idleOn && !breath && !loveSwap) return;
       idleOn = false;
+      markReveal?.kill();
+      markReveal = null;
+      gsap.killTweensOf("[data-title-dot]");
+      gsap.set("[data-title-dot]", {
+        x: 0,
+        y: 0,
+        scaleX: 1,
+        scaleY: 1,
+        scale: 1,
+        rotate: 0,
+        autoAlpha: 1,
+        transformOrigin: "50% 100%",
+      });
+      setMarksOn(false);
       stopBreath();
       stopLove();
       stopWorld();
@@ -586,21 +601,74 @@ export function Hero() {
         gsap.fromTo(
           layer,
           { autoAlpha: 0 },
-          { autoAlpha: 0.55, duration: 1.8, delay: 0.25, ease: "power1.out", overwrite: true },
+          { autoAlpha: 1, duration: 1.8, delay: 0.25, ease: "power1.out", overwrite: true },
         );
       }
 
       const el = word();
       const light = glow();
       if (el) gsap.set(el, { transformOrigin: "50% 90%", y: 0, scale: 1 });
-      if (light) gsap.set(light, { xPercent: -50, yPercent: -50, scale: 0.78, opacity: 0.55, transformOrigin: "50% 50%" });
+      if (light) gsap.set(light, { xPercent: -50, yPercent: -50, scale: 0.78, opacity: 0.32, transformOrigin: "50% 50%" });
       breath = gsap.timeline({
         repeat: -1,
         yoyo: true,
         defaults: { duration: 2.65, ease: "sine.inOut" },
       });
       if (el) breath.to(el, { y: -4, scale: 1.012 }, 0);
-      if (light) breath.to(light, { scale: 1.72, opacity: 1 }, 0);
+      if (light) breath.to(light, { scale: 1.28, opacity: 0.52 }, 0);
+
+      gsap.set("[data-title-dot]", {
+        x: 0,
+        y: 0,
+        scale: 1,
+        scaleX: 1,
+        scaleY: 1,
+        autoAlpha: 1,
+        rotate: 0,
+        transformOrigin: "50% 100%",
+      });
+      markReveal = gsap.timeline({ delay: 1.05, defaults: { ease: "power2.out" } });
+      markReveal
+        .to("[data-title-dot]", { y: "-0.38em", duration: 0.18 })
+        .to("[data-title-dot]", { y: 0, duration: 0.14, ease: "power2.in" })
+        .to("[data-title-dot]", { scaleY: 0.72, scaleX: 1.2, duration: 0.07 })
+        .to("[data-title-dot]", { scaleY: 1, scaleX: 1, duration: 0.1 })
+        .to("[data-title-dot]", { y: "-0.48em", duration: 0.2 })
+        .to("[data-title-dot]", { y: 0, duration: 0.15, ease: "power2.in" })
+        .to("[data-title-dot]", { scaleY: 0.7, scaleX: 1.22, duration: 0.07 })
+        .to("[data-title-dot]", { scaleY: 1, scaleX: 1, duration: 0.1 })
+        .set("[data-title-dot]", { transformOrigin: "50% 50%" })
+        .addLabel("launch")
+        .to("[data-title-dot]", { y: "-1.05em", duration: 0.28, ease: "power2.out" }, "launch")
+        .to("[data-title-dot]", { x: "2.4em", rotate: 10, duration: 0.7, ease: "sine.out" }, "launch")
+        .to(
+          "[data-title-dot]",
+          {
+            y: "0.55em",
+            scale: 0.08,
+            autoAlpha: 0,
+            duration: 0.42,
+            ease: "power2.in",
+          },
+          "launch+=0.28",
+        )
+        .add(() => setMarksOn(true), "launch+=0.5")
+        .to({}, { duration: 3 })
+        .set("[data-title-dot]", {
+          x: 0,
+          y: 0,
+          rotate: 0,
+          scale: 0.45,
+          scaleX: 1,
+          scaleY: 1,
+          transformOrigin: "50% 100%",
+        })
+        .to("[data-title-dot]", {
+          autoAlpha: 1,
+          scale: 1,
+          duration: 0.5,
+          ease: "power2.out",
+        });
 
       syncLoveLayout();
       const slot = loveSlot();
@@ -755,19 +823,13 @@ export function Hero() {
             </div>
             <div className="hero-world" data-hero-world>
               <div className="hero-globe-stage">
-                <div className="hero-orbit" aria-hidden>
-                  {Array.from({ length: STARLINK_SATS }, (_, i) => (
-                    <span
-                      key={i}
-                      className="hero-sat"
-                      style={{ animationDelay: `${6.8 + i * 0.32}s` }}
-                    />
-                  ))}
-                </div>
                 <div className="hero-globe">
-                  <div className="hero-world-strip">
-                    <InlineSvg src="/countries.svg" className="hero-world-map" />
-                    <InlineSvg src="/countries.svg" className="hero-world-map" />
+                  <HeroGlobe marksOn={marksOn} />
+                  <div className="hero-globe-atmos" />
+                  <div className="hero-globe-flare" aria-hidden>
+                    <span className="hero-globe-flare-glow" />
+                    <span className="hero-globe-flare-core" />
+                    <span className="hero-globe-flare-streak" />
                   </div>
                 </div>
               </div>
