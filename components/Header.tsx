@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { BrandLockup } from "./BrandLockup";
 
 const links = [
@@ -12,10 +12,15 @@ const links = [
   { href: "/about/", label: "About" },
 ];
 
+// Outlasts the staggered link exit and the panel fade behind it, so nothing snaps. Mirrors the CSS.
+const CLOSE_MS = 580;
+
 export function Header() {
   const pathname = usePathname();
   const isHome = pathname === "/";
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const closeTimer = useRef(0);
   const menuId = useId();
   const navRef = useRef<HTMLElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -26,6 +31,23 @@ export function Header() {
   const [follow, setFollow] = useState({ x: 0, y: 0, width: 0, height: 0, ready: false });
 
   const hideFollow = () => setFollow((current) => ({ ...current, ready: false }));
+
+  // The drawer keeps rendering while `closing` holds, so the stagger can play backwards.
+  const closeMenu = useCallback(() => {
+    if (!open) return;
+    setOpen(false);
+    setClosing(true);
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = window.setTimeout(() => setClosing(false), CLOSE_MS);
+  }, [open]);
+
+  const openMenu = () => {
+    window.clearTimeout(closeTimer.current);
+    setClosing(false);
+    setOpen(true);
+  };
+
+  useEffect(() => () => window.clearTimeout(closeTimer.current), []);
 
   const moveFollow = (el: HTMLElement | null) => {
     const nav = navRef.current;
@@ -67,13 +89,9 @@ export function Header() {
   }, [open]);
 
   useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
-  useEffect(() => {
     if (!open) return;
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closeMenu();
     };
     const lockScroll = (event: Event) => {
       const target = event.target as Node | null;
@@ -83,12 +101,14 @@ export function Header() {
     document.addEventListener("keydown", onKey);
     document.addEventListener("wheel", lockScroll, { passive: false });
     document.addEventListener("touchmove", lockScroll, { passive: false });
+    window.addEventListener("popstate", closeMenu);
     return () => {
       document.removeEventListener("keydown", onKey);
       document.removeEventListener("wheel", lockScroll);
       document.removeEventListener("touchmove", lockScroll);
+      window.removeEventListener("popstate", closeMenu);
     };
-  }, [open]);
+  }, [open, closeMenu]);
 
   const drawerLinks = [...links, { href: "/contact/", label: "Contact" }];
 
@@ -101,12 +121,13 @@ export function Header() {
             : "border-ink/10 bg-study/85 text-ink"
         }`}
       >
-        <div className="site-header-bar mx-auto flex max-w-6xl items-center justify-between gap-4 overflow-visible px-5 py-5 sm:px-6">
+        <div className="site-header-bar mx-auto flex max-w-6xl items-center justify-between gap-3 overflow-hidden px-5 py-5 sm:px-6">
         <BrandLockup
           homeHref="/"
           homeLabel={isHome ? "Back to top" : "Home"}
+          onMenuClose={closeMenu}
           onHomeClick={(event) => {
-            setOpen(false);
+            closeMenu();
             if (!isHome) return;
             event.preventDefault();
             window.scrollTo(0, 0);
@@ -157,7 +178,7 @@ export function Header() {
             aria-expanded={open}
             aria-controls={menuId}
             aria-label={open ? "Close menu" : "Open menu"}
-            onClick={() => setOpen((value) => !value)}
+            onClick={() => (open ? closeMenu() : openMenu())}
           >
             <span className="site-nav-brace" aria-hidden>
               {"{"}
@@ -183,7 +204,9 @@ export function Header() {
       <div
         ref={drawerRef}
         id={menuId}
-        className={`site-nav-drawer ${open ? "is-open" : ""} ${isHome ? "on-dark" : "on-light"}`}
+        className={`site-nav-drawer ${open ? "is-open" : ""} ${closing ? "is-closing" : ""} ${
+          isHome ? "on-dark" : "on-light"
+        }`}
         aria-hidden={!open}
         inert={!open ? true : undefined}
       >
@@ -197,9 +220,7 @@ export function Header() {
                 href={link.href}
                 className={`site-nav-drawer-link ${active ? "is-active" : ""} ${quiet ? "is-quiet" : ""}`}
                 tabIndex={open ? 0 : -1}
-                onClick={() => {
-                  if (pathname.startsWith(link.href)) setOpen(false);
-                }}
+                onClick={closeMenu}
               >
                 {active ? (
                   <>

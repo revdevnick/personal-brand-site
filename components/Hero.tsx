@@ -230,6 +230,7 @@ export function Hero() {
       gsap.set("[data-pane-fail],[data-pane-fix]", { display: "none" });
       gsap.set("[data-pane-craft]", { display: "block" });
       gsap.set("[data-output]", { autoAlpha: 0, maxHeight: 0, paddingTop: 0, paddingBottom: 0 });
+      gsap.set(".hero-grid", { autoAlpha: 0 });
       gsap.set(".story-cluster", { height: 0, autoAlpha: 0, overflow: "hidden", scale: 0.92 });
       gsap.set("[data-term-slot]", { gridTemplateRows: "0fr" });
       gsap.set("[data-terminal]", { autoAlpha: 0 });
@@ -383,6 +384,7 @@ export function Hero() {
         .addLabel("craft")
         .to("[data-cue]", { autoAlpha: 0, duration: 0.18 })
         .to(".hero-motes", { autoAlpha: 0, duration: 0.18 }, "<")
+        .to(".hero-grid", { autoAlpha: 1, duration: 0.45 }, "<")
         .to(".hero-glow-code", { autoAlpha: 0.45, duration: 0.35 }, "<")
         .to("[data-phrase-a]", { fontSize: captionSize, duration: 0.45 }, "<")
         .to(".story-stack", { gap: "0.7rem", duration: 0.45 }, "<")
@@ -502,7 +504,6 @@ export function Hero() {
       return raw;
     };
 
-    const isCompact = () => window.matchMedia("(max-width: 767px)").matches;
     const loveSlot = () => stage.querySelector<HTMLElement>("[data-love]");
     const loveEn = () => stage.querySelector<HTMLElement>("[data-love-en]");
     const loveFaces = ["[data-love-en]", "[data-love-sign]", "[data-love-zh]", "[data-love-hi]", "[data-love-th]"];
@@ -510,9 +511,17 @@ export function Hero() {
     const slotWidthFor = (sel: string) => {
       const en = loveEn();
       const enW = en ? Math.ceil(en.scrollWidth || en.getBoundingClientRect().width) : 0;
-      if (isCompact() || (!sel.includes("love-hi") && !sel.includes("love-th"))) return enW;
+      if (!sel.includes("love-hi") && !sel.includes("love-th")) return enW;
       const face = stage.querySelector<HTMLElement>(`${sel} .story-love-face`);
-      const faceW = face ? Math.ceil(face.scrollWidth || face.getBoundingClientRect().width) : 0;
+      if (!face) return enW;
+      const cs = getComputedStyle(face);
+      const ctx = document.createElement("canvas").getContext("2d");
+      let inkW = 0;
+      if (ctx) {
+        ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        inkW = ctx.measureText((face.textContent ?? "").trim()).width;
+      }
+      const faceW = Math.ceil(Math.max(face.scrollWidth, face.getBoundingClientRect().width, inkW) + 8);
       return Math.max(enW, faceW);
     };
 
@@ -530,10 +539,68 @@ export function Hero() {
       const slot = loveSlot();
       const width = slotWidthFor(sel);
       if (!slot || !width) return;
-      gsap.set(slot, { width, overwrite: true });
+      slot.style.width = `${width}px`;
+    };
+
+    const fitHeadline = () => {
+      const h1 = stage.querySelector<HTMLElement>("[data-phrase-a]");
+      const box = stage.querySelector<HTMLElement>("[data-phrase]");
+      const tail = h1?.querySelector<HTMLElement>(".story-phrase-tail");
+      const slot = loveSlot();
+      if (!h1 || !box || !tail) return;
+
+      const available = box.clientWidth;
+      if (available < 48) return;
+
+      const current = parseFloat(getComputedStyle(h1).fontSize);
+      if (!current) return;
+
+      const prevH1Width = h1.style.width;
+      const prevTailDisplay = tail.style.display;
+      const prevTailWidth = tail.style.width;
+      const wasWrap = h1.classList.contains("is-wrap");
+      const wasSingle = h1.classList.contains("is-single");
+
+      h1.classList.add("is-single");
+      h1.classList.remove("is-wrap");
+      h1.style.width = "max-content";
+      tail.style.display = "inline";
+      tail.style.width = "max-content";
+
+      const fullW = h1.scrollWidth;
+      const tailW = tail.scrollWidth;
+      const loveW = slot?.getBoundingClientRect().width ?? 0;
+      const maxLove = Math.max(loveW, ...loveFaces.map((sel) => slotWidthFor(sel)));
+
+      h1.style.width = prevH1Width;
+      tail.style.display = prevTailDisplay;
+      tail.style.width = prevTailWidth;
+      h1.classList.toggle("is-wrap", wasWrap);
+      h1.classList.toggle("is-single", wasSingle);
+
+      const extra = Math.max(0, maxLove - loveW);
+      const oneW = Math.max(1, fullW + extra);
+      const twoW = Math.max(1, fullW - tailW + extra, tailW);
+      const usable = Math.max(1, available - 8);
+      const rawOne = current * (usable / oneW);
+      const rawTwo = current * (usable / twoW);
+      const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      const maxPx = Math.min(7 * rootPx, window.innerHeight * 0.24);
+      const minPx = 2.35 * rootPx;
+      const wrap = window.innerWidth < 1100;
+      const longest = wrap ? rawTwo : rawOne;
+      const lineHeight = wrap ? 1.28 : 1.08;
+      const maxByH = (window.innerHeight * (wrap ? 0.44 : 0.3)) / (wrap ? 2 * lineHeight : lineHeight);
+      const size = Math.max(minPx, Math.min(longest, maxPx, maxByH));
+
+      h1.classList.toggle("is-wrap", wrap);
+      h1.classList.toggle("is-single", !wrap);
+      h1.style.setProperty("--hero-type", `${size.toFixed(2)}px`);
+      if (window.scrollY <= 8) h1.style.fontSize = "";
     };
 
     const syncLoveLayout = () => {
+      fitHeadline();
       fitLoveScripts();
       applyLoveSlot();
     };
@@ -549,7 +616,8 @@ export function Hero() {
         face.style.setProperty("--love-script-shift", "0px");
         const body = measureInk(face, scriptBody(face));
         if (!body?.ascent) return;
-        const y = Math.min(3.6, Math.max(0.7, s.ascent / body.ascent));
+        const wrap = stage.querySelector("[data-phrase-a]")?.classList.contains("is-wrap");
+        const y = Math.min(wrap ? 1.42 : 3.6, Math.max(0.7, s.ascent / body.ascent));
         face.style.setProperty("--love-script-y", y.toFixed(3));
         face.style.setProperty("--love-script-origin", `${body.emAscent}px`);
         face.style.setProperty("--love-script-shift", `${(s.emAscent - body.emAscent).toFixed(2)}px`);
@@ -563,6 +631,7 @@ export function Hero() {
       gsap.set("[data-love-en]", { autoAlpha: 1, y: 0, scale: 1, rotateX: 0 });
       gsap.set("[data-love-sign],[data-love-zh],[data-love-hi],[data-love-th]", { autoAlpha: 0, y: 0, scale: 1, rotateX: 0 });
       gsap.set("[data-love]", { width: "auto" });
+      loveSlot()?.style.removeProperty("width");
       stage.querySelectorAll<HTMLElement>(".story-love-hi .story-love-face, .story-love-th .story-love-face").forEach((face) => {
         face.style.removeProperty("--love-script-y");
         face.style.removeProperty("--love-script-shift");
@@ -638,21 +707,50 @@ export function Hero() {
         .to("[data-title-dot]", { scaleY: 0.7, scaleX: 1.22, duration: 0.07 })
         .to("[data-title-dot]", { scaleY: 1, scaleX: 1, duration: 0.1 })
         .set("[data-title-dot]", { transformOrigin: "50% 50%" })
-        .addLabel("launch")
-        .to("[data-title-dot]", { y: "-1.05em", duration: 0.28, ease: "power2.out" }, "launch")
-        .to("[data-title-dot]", { x: "2.4em", rotate: 10, duration: 0.7, ease: "sine.out" }, "launch")
+        .addLabel("launch");
+
+      const hopLeft = window.matchMedia("(max-width: 767px) and (orientation: portrait)").matches;
+      const phone = window.matchMedia("(max-width: 767px)").matches;
+      markReveal
         .to(
           "[data-title-dot]",
           {
-            y: "0.55em",
-            scale: 0.08,
-            autoAlpha: 0,
-            duration: 0.42,
+            y: hopLeft ? "-0.52em" : "-1.05em",
+            duration: hopLeft ? 0.2 : 0.28,
+            ease: "power2.out",
+          },
+          "launch",
+        )
+        .to(
+          "[data-title-dot]",
+          {
+            x: hopLeft ? "-1.15em" : "2.4em",
+            rotate: hopLeft ? -8 : 10,
+            duration: hopLeft ? 0.85 : 0.7,
+            ease: "sine.out",
+          },
+          "launch",
+        )
+        .to(
+          "[data-title-dot]",
+          {
+            y: phone ? "28svh" : "0.55em",
+            duration: phone ? 0.82 : 0.42,
             ease: "power2.in",
           },
-          "launch+=0.28",
+          phone ? "launch+=0.18" : "launch+=0.28",
         )
-        .add(() => setMarksOn(true), "launch+=0.5")
+        .to(
+          "[data-title-dot]",
+          {
+            scale: 0.08,
+            autoAlpha: 0,
+            duration: phone ? 0.34 : 0.42,
+            ease: "power2.in",
+          },
+          phone ? "launch+=0.66" : "launch+=0.28",
+        )
+        .add(() => setMarksOn(true), phone ? "launch+=0.78" : "launch+=0.5")
         .to({}, { duration: 3 })
         .set("[data-title-dot]", {
           x: 0,
@@ -682,7 +780,7 @@ export function Hero() {
           .to(from, { autoAlpha: 0, duration: 0.55, ease: "power1.inOut" })
           .to(to, { autoAlpha: 1, duration: 0.55, ease: "power1.inOut" }, "<");
         if (slot) {
-          step.to(slot, { width: slotWidthFor(to), duration: 0.55, ease: "power2.inOut" }, "<");
+          step.to(slot, { width: () => `${slotWidthFor(to)}px`, duration: 0.55, ease: "power2.inOut" }, "<");
         }
         return step;
       };
@@ -739,33 +837,36 @@ export function Hero() {
     window.addEventListener("scroll", onScroll, { passive: true });
 
     let resizeRaf = 0;
+    let lastPhraseW = 0;
     const onResize = () => {
-      if (!introDone || !idleOn) return;
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
       resizeRaf = requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           resizeRaf = 0;
-          if (idleOn) syncLoveLayout();
+          syncLoveLayout();
         });
       });
     };
 
-    const compactMq = window.matchMedia("(max-width: 767px)");
-    compactMq.addEventListener("change", onResize);
     window.addEventListener("resize", onResize);
     window.addEventListener("orientationchange", onResize);
     window.visualViewport?.addEventListener("resize", onResize);
-    const phrase = stage.querySelector("[data-phrase-a]");
-    const phraseWatch = new ResizeObserver(onResize);
-    if (phrase) phraseWatch.observe(phrase);
+    const phraseBox = stage.querySelector("[data-phrase]");
+    const phraseWatch = new ResizeObserver((entries) => {
+      const width = Math.round(entries[0]?.contentRect.width ?? 0);
+      if (!width || Math.abs(width - lastPhraseW) < 1) return;
+      lastPhraseW = width;
+      onResize();
+    });
+    if (phraseBox) phraseWatch.observe(phraseBox);
 
+    syncLoveLayout();
     void document.fonts.ready.then(() => {
-      if (idleOn) syncLoveLayout();
+      syncLoveLayout();
     });
 
     return () => {
       window.removeEventListener("scroll", onScroll);
-      compactMq.removeEventListener("change", onResize);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
