@@ -324,17 +324,34 @@ export function Hero() {
           if (next == null || (story.scrub?.time() ?? 0) < next) showCue();
         });
 
-      const catchUp = (tl: gsap.core.Timeline, local: number) => {
-        if (tl.progress() >= 1) {
+      // Nested plays (typing, page turns) can ease forward on slow scroll, but must
+      // snap on reverse or large deltas so fast bottom→top never trails scroll.
+      const syncNested = (tl: gsap.core.Timeline, local: number, scrollingDown: boolean) => {
+        const target = Math.max(0, Math.min(1, local));
+        const current = tl.progress();
+        const gap = target - current;
+
+        if (!scrollingDown || Math.abs(gap) > 0.12) {
+          tl.pause();
+          tl.progress(target);
+          return;
+        }
+        if (current >= 1) {
           tl.timeScale(1);
           return;
         }
-        if (local >= 0.95) {
+        if (target >= 0.95) {
+          tl.pause();
           tl.progress(1);
           return;
         }
-        const behind = local - tl.progress();
-        tl.timeScale(behind > 0.08 ? 1 + behind * 14 : 1).play();
+        tl.timeScale(gap > 0.08 ? 1 + gap * 14 : 1).play();
+      };
+
+      const pinNested = (tl: gsap.core.Timeline, at: number) => {
+        if (tl.progress() === at && !tl.isActive()) return;
+        tl.pause();
+        tl.progress(at);
       };
 
       const scrub = gsap.timeline({
@@ -343,37 +360,41 @@ export function Hero() {
           trigger: stage,
           start: "top top",
           end: "bottom bottom",
-          scrub: 0.28,
+          // true = 1:1 with scroll (no lag). A number would lerp and trail on fast jumps.
+          scrub: true,
           invalidateOnRefresh: true,
           onUpdate(self) {
             const anim = self.animation as gsap.core.Timeline;
             const t = anim.time();
+            const down = self.direction >= 0;
             const craftAt = anim.labels.craftPlay ?? 0;
             const bookAt = anim.labels.book ?? 0;
             const soulAt = anim.labels.soul ?? 0;
             const soulPlayAt = anim.labels.soulPlay ?? 0;
             const finaleAt = anim.labels.finale ?? 0;
 
-            if (t >= craftAt && t < bookAt) {
-              catchUp(craftPlay, (t - craftAt) / Math.max(0.001, bookAt - craftAt));
-            } else if (t >= bookAt && craftPlay.progress() < 1) {
-              craftPlay.progress(1);
+            if (t < craftAt) {
+              pinNested(craftPlay, 0);
+            } else if (t >= craftAt && t < bookAt) {
+              syncNested(craftPlay, (t - craftAt) / Math.max(0.001, bookAt - craftAt), down);
+            } else {
+              pinNested(craftPlay, 1);
             }
 
-            if (t >= bookAt && t < soulAt) {
-              catchUp(bookPlay, (t - bookAt) / Math.max(0.001, soulAt - bookAt));
-            } else if (t >= soulAt && bookPlay.progress() < 1) {
-              bookPlay.progress(1);
+            if (t < bookAt) {
+              pinNested(bookPlay, 0);
+            } else if (t >= bookAt && t < soulAt) {
+              syncNested(bookPlay, (t - bookAt) / Math.max(0.001, soulAt - bookAt), down);
+            } else {
+              pinNested(bookPlay, 1);
             }
 
-            if (t >= soulPlayAt && t < finaleAt) {
-              if (craftPlay.progress() < 1) craftPlay.progress(1);
-              if (bookPlay.progress() < 1) bookPlay.progress(1);
-              catchUp(soulPlay, (t - soulPlayAt) / Math.max(0.001, finaleAt - soulPlayAt));
-            } else if (t >= finaleAt) {
-              if (craftPlay.progress() < 1) craftPlay.progress(1);
-              if (bookPlay.progress() < 1) bookPlay.progress(1);
-              if (soulPlay.progress() < 1) soulPlay.progress(1);
+            if (t < soulPlayAt) {
+              pinNested(soulPlay, 0);
+            } else if (t >= soulPlayAt && t < finaleAt) {
+              syncNested(soulPlay, (t - soulPlayAt) / Math.max(0.001, finaleAt - soulPlayAt), down);
+            } else {
+              pinNested(soulPlay, 1);
               hideCue();
             }
           },
