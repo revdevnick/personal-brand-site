@@ -30,7 +30,10 @@ export function Header() {
   const [slotWidth, setSlotWidth] = useState(0);
   const [follow, setFollow] = useState({ x: 0, y: 0, width: 0, height: 0, ready: false });
 
-  const hideFollow = () => setFollow((current) => ({ ...current, ready: false }));
+  const hideFollow = useCallback(
+    () => setFollow((current) => ({ ...current, ready: false })),
+    [],
+  );
 
   // The drawer keeps rendering while `closing` holds, so the stagger can play backwards.
   const closeMenu = useCallback(() => {
@@ -49,32 +52,38 @@ export function Header() {
 
   useEffect(() => () => window.clearTimeout(closeTimer.current), []);
 
-  const moveFollow = (el: HTMLElement | null) => {
-    const nav = navRef.current;
-    if (!nav || !el) {
-      hideFollow();
-      return;
-    }
-    const navBox = nav.getBoundingClientRect();
-    const box = el.getBoundingClientRect();
-    setFollow({
-      x: box.left - navBox.left,
-      y: box.top - navBox.top,
-      width: box.width,
-      height: box.height,
-      ready: true,
-    });
-  };
+  const moveFollow = useCallback(
+    (el: HTMLElement | null) => {
+      const nav = navRef.current;
+      if (!nav || !el) {
+        hideFollow();
+        return;
+      }
+      const navBox = nav.getBoundingClientRect();
+      const box = el.getBoundingClientRect();
+      setFollow({
+        x: box.left - navBox.left,
+        y: box.top - navBox.top,
+        width: box.width,
+        height: box.height,
+        ready: true,
+      });
+    },
+    [hideFollow],
+  );
 
-  const activeItem = () =>
-    itemRefs.current.find((node, index) => node && pathname.startsWith(links[index].href)) ?? null;
+  const activeItem = useCallback(
+    () =>
+      itemRefs.current.find((node, index) => node && pathname.startsWith(links[index].href)) ?? null,
+    [pathname],
+  );
 
   useLayoutEffect(() => {
     const place = () => moveFollow(activeItem());
     place();
     window.addEventListener("resize", place);
     return () => window.removeEventListener("resize", place);
-  }, [pathname]);
+  }, [pathname, moveFollow, activeItem]);
 
   useLayoutEffect(() => {
     const measure = () => {

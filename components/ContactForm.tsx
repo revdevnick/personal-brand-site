@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 
 const formId = process.env.NEXT_PUBLIC_FORMSPREE_ID;
 

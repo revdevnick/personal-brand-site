@@ -265,7 +265,10 @@ function compile(gl: WebGLRenderingContext, type: number, source: string) {
 export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const marksOnRef = useRef(marksOn);
-  marksOnRef.current = marksOn;
+
+  useEffect(() => {
+    marksOnRef.current = marksOn;
+  }, [marksOn]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -334,7 +337,7 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
     let travelTime = 0;
     let lastNow = 0;
     let alive = true;
-    let playing = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const playing = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     let raf = 0;
 
     const fit = () => {
