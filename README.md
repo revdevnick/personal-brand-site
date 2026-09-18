@@ -2,7 +2,7 @@
 
 Public doorway for [Nick Perkins](https://github.com/revdevnick) — pastor, writer, builder. The site introduces him so people can find the work. It is here to serve the Lord.
 
-**Line:** I love solving problems. Some of them take code. The deepest ones take Jesus.
+**Line:** I love solving problems. Some of them take code. The rest take Jesus.
 
 ## Local development (Docker)
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { InlineSvg } from "./InlineSvg";
@@ -9,6 +9,7 @@ import { HeroGlobe } from "./HeroGlobe";
 import { Logo } from "./Logo";
 
 gsap.registerPlugin(ScrollTrigger);
+ScrollTrigger.config({ ignoreMobileResize: true });
 
 const CODE_OK = `declare function craft(need: string): string;
 
@@ -72,6 +73,8 @@ const HERO_STARS = [
 
 const STAR_TINTS = ["", "is-cool", "is-warm"] as const;
 
+type Scene = "earth" | "craft" | "soul" | "finale";
+
 function useMediaQuery(query: string) {
   return useSyncExternalStore(
     (onChange) => {
@@ -129,24 +132,10 @@ function StatusStop() {
 
 export function Hero() {
   const root = useRef<HTMLElement>(null);
-  const headSvg = useRef<SVGSVGElement | null>(null);
-  const bookSvg = useRef<SVGSVGElement | null>(null);
   const reduce = useMediaQuery("(prefers-reduced-motion: reduce)");
   const coarse = useMediaQuery("(pointer: coarse)");
-  const [headReady, setHeadReady] = useState(false);
-  const [bookReady, setBookReady] = useState(false);
   const [replay, setReplay] = useState(0);
-  const [marksOn, setMarksOn] = useState(false);
-
-  const onHeadReady = useCallback((svg: SVGSVGElement) => {
-    headSvg.current = svg;
-    setHeadReady(true);
-  }, []);
-
-  const onBookReady = useCallback((svg: SVGSVGElement) => {
-    bookSvg.current = svg;
-    setBookReady(true);
-  }, []);
+  const marksOn = useRef(false);
 
   useEffect(() => {
     const replayHome = () => setReplay((n) => n + 1);
@@ -160,181 +149,329 @@ export function Hero() {
 
   useEffect(() => {
     const stage = root.current;
-    if (!stage || reduce || !headReady || !bookReady) return;
+    if (!stage || reduce) return;
+
+    const copy = stage.querySelector<HTMLElement>("[data-copy]");
+    const phraseA = stage.querySelector<HTMLElement>("[data-phrase-a]");
+    const codeOk = stage.querySelector<HTMLElement>("[data-code-ok]");
+    const codeFail = stage.querySelector<HTMLElement>("[data-code-fail]");
+    const codeFix = stage.querySelector<HTMLElement>("[data-code-fix]");
+    const paneCraft = stage.querySelector<HTMLElement>("[data-pane-craft]");
+    const paneFail = stage.querySelector<HTMLElement>("[data-pane-fail]");
+    const paneFix = stage.querySelector<HTMLElement>("[data-pane-fix]");
+    const globe = stage.querySelector<HTMLElement>(".hero-globe");
+    const stars = stage.querySelector<HTMLElement>(".hero-stars");
+    const termSlot = stage.querySelector<HTMLElement>("[data-term-slot]");
+    const typing = { gen: 0, raf: 0, timer: 0 };
 
     const ctx = gsap.context(() => {
-      const paths = headSvg.current?.querySelectorAll("path, polygon, rect") ?? [];
-      const book = stage.querySelector<HTMLElement>("[data-bible]");
-      const slot = stage.querySelector<HTMLElement>("[data-brace-left]");
-      const cluster = stage.querySelector<HTMLElement>(".story-cluster");
-      const doors = stage.querySelector<HTMLElement>("[data-doors]");
-      const cue = stage.querySelector<HTMLElement>("[data-cue]");
-      const codeOk = stage.querySelector<HTMLElement>("[data-code-ok]");
-      const codeFail = stage.querySelector<HTMLElement>("[data-code-fail]");
-      const codeFix = stage.querySelector<HTMLElement>("[data-code-fix]");
-      const sheet = (id: string) => [...(bookSvg.current?.querySelectorAll(`[data-sheet="${id}"]`) ?? [])];
-      const sheets = [sheet("1"), sheet("2"), sheet("3")];
-      const leaves = sheets.flat();
+      const captionType = () => {
+        const b = stage.querySelector<HTMLElement>("[data-phrase-b]");
+        const c = stage.querySelector<HTMLElement>("[data-phrase-c]");
+        const bPx = b ? parseFloat(getComputedStyle(b).fontSize) : 22;
+        const cPx = c ? parseFloat(getComputedStyle(c).fontSize) : 52;
+        const aboveB = bPx * 1.65;
+        const belowC = cPx * 0.74;
+        return `${Math.max(bPx + 16, Math.min(aboveB, belowC)).toFixed(2)}px`;
+      };
+      const loadType = () =>
+        phraseA?.style.getPropertyValue("--hero-load") || (phraseA ? getComputedStyle(phraseA).fontSize : "3.1rem");
+      const copyLift = () => (window.innerWidth < 768 ? window.innerHeight * -0.22 : window.innerHeight * -0.32);
+      const copyFinale = () => 0;
+      const termLift = () => copyLift() + (window.innerWidth < 768 ? 64 : 80);
 
-      const clusterCraft = () => (window.innerWidth < 768 ? "14svh" : "16svh");
-      const clusterClear = () => (window.innerWidth < 768 ? "10svh" : "12svh");
-      const clusterFinale = () => (window.innerWidth < 768 ? "9svh" : window.innerHeight < 800 ? "11svh" : "13svh");
-      const captionSize = () => (window.innerWidth < 768 ? "1.7rem" : "3.15rem");
-      const finaleA = () => (window.innerWidth < 768 ? "2.15rem" : window.innerHeight < 800 ? "3.4rem" : "4.35rem");
-      const finaleB = () => (window.innerWidth < 768 ? "1.85rem" : window.innerHeight < 800 ? "3rem" : "3.85rem");
-      const finaleC = () => (window.innerWidth < 768 ? "2.65rem" : window.innerHeight < 800 ? "4.6rem" : "6.1rem");
-
-      const bookDockX = () => {
-        if (!book || !slot || !cluster) return 0;
-        const clusterBox = cluster.getBoundingClientRect();
-        const slotBox = slot.getBoundingClientRect();
-        const clusterCenter = clusterBox.left + clusterBox.width / 2;
-        const targetCenter = slotBox.right - book.offsetWidth / 2;
-        return targetCenter - clusterCenter;
+      const showPane = (name: "craft" | "fail" | "fix") => {
+        const panes = [
+          [paneCraft, name === "craft"],
+          [paneFail, name === "fail"],
+          [paneFix, name === "fix"],
+        ] as const;
+        gsap.killTweensOf([paneCraft, paneFail, paneFix, "[data-compiled]", "[data-failed]", "[data-error]", "[data-compiled-faith]", "[data-output]"]);
+        panes.forEach(([pane, on]) => {
+          if (!pane) return;
+          gsap.set(pane, {
+            autoAlpha: on ? 1 : 0,
+            position: on ? "relative" : "absolute",
+            inset: on ? "auto" : 0,
+            pointerEvents: on ? "auto" : "none",
+          });
+        });
       };
 
-      const typeCode = (el: HTMLElement | null, source: string, duration = Math.min(2.6, Math.max(1.4, source.length * 0.016))) =>
-        gsap.to(
-          { t: 0 },
-          {
-            t: 1,
-            duration,
-            ease: "none",
-            onUpdate() {
-              setTyped(el, source, this.progress());
-            },
-          },
-        );
-
-      const showCue = () => {
-        if (!cue) return;
-        gsap.to(cue, { autoAlpha: 1, y: 0, duration: 0.4, overwrite: "auto" });
-      };
-
-      const hideCue = () => {
-        if (!cue) return;
-        gsap.to(cue, { autoAlpha: 0, duration: 0.25, overwrite: "auto" });
-      };
-
-      if (paths.length) gsap.set(paths, { autoAlpha: 1 });
-      gsap.set(
-        "[data-brace-right],[data-brace-left],[data-bible],[data-terminal],[data-word],[data-compiled],[data-failed],[data-error],[data-compiled-faith],[data-output],[data-phrase-b],[data-phrase-c]",
-        { autoAlpha: 0 },
-      );
-      gsap.set("[data-phrase]", { autoAlpha: 1 });
-      gsap.set("[data-phrase-a]", { autoAlpha: 1 });
-      gsap.set("[data-phrase-b]", { autoAlpha: 0, height: 0, overflow: "hidden", marginTop: 0, y: 18 });
-      gsap.set("[data-phrase-c]", { autoAlpha: 0, height: 0, overflow: "hidden", marginTop: 0 });
-      gsap.set("[data-deep-word]", { autoAlpha: 0, y: 18 });
+      gsap.set("[data-terminal],[data-compiled],[data-failed],[data-error],[data-compiled-faith],[data-output]", {
+        autoAlpha: 0,
+      });
+      gsap.set("[data-phrase-b]", { autoAlpha: 0, y: 18 });
+      gsap.set("[data-phrase-c]", { autoAlpha: 0, y: 8 });
+      gsap.set("[data-deep-word]", { autoAlpha: 0, y: 36, scale: 0.82 });
       gsap.set("[data-code-ok],[data-code-fail],[data-code-fix]", { textContent: "" });
-      gsap.set("[data-pane-fail],[data-pane-fix]", { display: "none" });
-      gsap.set("[data-pane-craft]", { display: "block" });
-      gsap.set("[data-output]", { autoAlpha: 0, maxHeight: 0, paddingTop: 0, paddingBottom: 0 });
-      gsap.set(".hero-grid", { autoAlpha: 0 });
-      gsap.set(".story-cluster", { height: 0, autoAlpha: 0, overflow: "hidden", scale: 0.92 });
-      gsap.set("[data-term-slot]", { gridTemplateRows: "0fr" });
-      gsap.set("[data-terminal]", { autoAlpha: 0 });
-      gsap.set("[data-doors]", { autoAlpha: 0, height: 0, overflow: "hidden", pointerEvents: "none" });
-      gsap.set(".story-stack", { gap: 0 });
-      gsap.set("[data-bible]", { autoAlpha: 0, x: 0, y: 0, xPercent: -50, yPercent: -50, rotate: 0, scale: 1.08 });
-      if (leaves.length) {
-        gsap.set(leaves, { transformOrigin: "0% 50%", transformBox: "fill-box", rotateY: 0, scaleX: 1, autoAlpha: 1 });
+      gsap.set("[data-doors]", { xPercent: -50, autoAlpha: 0, y: 16, pointerEvents: "none" });
+      gsap.set("[data-terminal]", { y: 28 });
+      gsap.set("[data-cluster]", { xPercent: -50, y: 10, scale: 0.94, autoAlpha: 0 });
+      gsap.set(termSlot, { xPercent: -50, y: 0 });
+      showPane("craft");
+      if (globe) gsap.set(globe, { x: 0, y: 0, scale: 1, autoAlpha: 1, transformOrigin: "50% 50%" });
+      if (stars) {
+        gsap.set(stars, {
+          "--star-hole": window.innerWidth < 768 ? "64vw" : "56vw",
+          "--star-hole-x": "66%",
+          "--star-hole-y": window.innerWidth < 768 ? "78%" : "82%",
+          "--star-gain": 0.62,
+        });
       }
 
-      const story = { scrub: null as gsap.core.Timeline | null };
+      let scene: Scene = "earth";
+      let typeGen = 0;
+      let typeRaf = 0;
 
-      const craftPlay = gsap.timeline({ paused: true });
-      craftPlay
-        .add(typeCode(codeOk, CODE_OK))
-        .fromTo("[data-compiled]", { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.22 })
-        .to({ hold: 0 }, { hold: 1, duration: 0.2 })
-        .add(() => {
-          const next = story.scrub?.labels.book;
-          if (next == null || (story.scrub?.time() ?? 0) < next) showCue();
-        });
+      const stopType = () => {
+        typeGen += 1;
+        typing.gen = typeGen;
+        if (typeRaf) cancelAnimationFrame(typeRaf);
+        typeRaf = 0;
+        typing.raf = 0;
+        if (typing.timer) window.clearTimeout(typing.timer);
+        typing.timer = 0;
+      };
 
-      const bookPlay = gsap.timeline({ paused: true });
-      bookPlay
-        .add(() => hideCue())
-        .to("[data-terminal]", { autoAlpha: 0, duration: 0.28 })
-        .to("[data-term-slot]", { gridTemplateRows: "0fr", duration: 0.3 }, "<")
-        .set(leaves, { rotateY: 0, scaleX: 1, autoAlpha: 1 })
-        .fromTo(
-          "[data-bible]",
-          { autoAlpha: 0, scale: 0.92, x: 0 },
-          { autoAlpha: 1, scale: 1.08, duration: 0.4, ease: "power2.out" },
-        );
-
-      sheets.forEach((pair, index) => {
-        if (!pair.length) return;
-        bookPlay.fromTo(
-          pair,
-          { rotateY: 10, scaleX: 1, autoAlpha: 1 },
-          {
-            rotateY: -158,
-            scaleX: 0.08,
-            autoAlpha: 0,
-            duration: 0.48,
-            ease: "power2.in",
-            stagger: 0.05,
+      const runType = (el: HTMLElement | null, source: string, duration: number, token: number, onDone?: () => void) => {
+        const state = { t: 0 };
+        const tween = gsap.to(state, {
+          t: 1,
+          duration,
+          ease: "none",
+          onUpdate() {
+            if (token !== typeGen) {
+              tween.kill();
+              return;
+            }
+            setTyped(el, source, state.t);
           },
-          index === 0 ? "+=0.12" : "-=0.18",
-        );
-      });
-
-      bookPlay
-        .to("[data-bible]", { x: bookDockX, scale: 1, duration: 0.75, ease: "power3.inOut" })
-        .fromTo("[data-brace-left]", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.32 })
-        .to("[data-bible]", { autoAlpha: 0, duration: 0.28 }, "<")
-        .add(() => {
-          const next = story.scrub?.labels.soul;
-          if (next == null || (story.scrub?.time() ?? 0) < next) showCue();
+          onComplete() {
+            if (token !== typeGen) return;
+            setTyped(el, source, 1);
+            onDone?.();
+          },
         });
+      };
 
-      const soulPlay = gsap.timeline({ paused: true });
-      soulPlay
-        .add(() => hideCue())
-        .set("[data-pane-craft]", { display: "none" })
-        .set("[data-pane-fail]", { display: "block" })
-        .set("[data-pane-fix]", { display: "none" })
-        .add(typeCode(codeFail, CODE_FAIL))
-        .fromTo("[data-failed]", { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.22 })
-        .fromTo("[data-error]", { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.22 }, "<")
-        .to({ hold: 0 }, { hold: 1, duration: 0.85 })
-        .set("[data-pane-fail]", { display: "none" })
-        .set("[data-pane-fix]", { display: "block" })
-        .add(typeCode(codeFix, CODE_FIX, Math.min(3.1, Math.max(1.8, CODE_FIX.length * 0.015))))
-        .fromTo("[data-compiled-faith]", { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.22 })
-        .to(".story-cluster", { height: clusterClear, duration: 0.35 })
-        .addLabel("peace")
-        .fromTo(
-          "[data-output]",
-          { autoAlpha: 0, maxHeight: 0, paddingTop: 0, paddingBottom: 0 },
-          { autoAlpha: 1, maxHeight: "22rem", paddingTop: "1.15em", paddingBottom: "1.25em", duration: 0.45 },
-        )
-        .to(
-          "[data-phrase-c]",
-          { autoAlpha: 1, height: "auto", overflow: "visible", marginTop: "0.22em", duration: 0.45 },
-          "<",
-        )
-        .to("[data-deep-word]", { autoAlpha: 1, y: 0, duration: 0.4, stagger: 0.05 }, "<")
-        .to({ hold: 0 }, { hold: 1, duration: 0.55 })
-        .add(() => {
-          const next = story.scrub?.labels.finale;
-          if (next == null || (story.scrub?.time() ?? 0) < next) showCue();
+      const resetCraft = () => {
+        setTyped(codeOk, CODE_OK, 0);
+        gsap.set("[data-compiled]", { autoAlpha: 0, x: 0 });
+      };
+
+      const resetSoul = () => {
+        setTyped(codeFail, CODE_FAIL, 0);
+        setTyped(codeFix, CODE_FIX, 0);
+        gsap.set("[data-failed],[data-error],[data-compiled-faith],[data-output]", { autoAlpha: 0 });
+        gsap.set("[data-output]", { maxHeight: 0, paddingTop: 0, paddingBottom: 0 });
+        gsap.set(paneFail, { y: 0 });
+        gsap.set(paneFix, { y: 0 });
+        stage.querySelector("[data-terminal]")?.classList.remove("hero-terminal-fail");
+      };
+
+      const completeCraft = () => {
+        stopType();
+        resetSoul();
+        showPane("craft");
+        setTyped(codeOk, CODE_OK, 1);
+        gsap.set("[data-compiled]", { autoAlpha: 1, x: 0 });
+      };
+
+      const playCraft = () => {
+        const token = ++typeGen;
+        showPane("craft");
+        resetSoul();
+        resetCraft();
+        runType(codeOk, CODE_OK, 1.35, token, () => {
+          if (token !== typeGen) return;
+          gsap.fromTo("[data-compiled]", { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.18 });
         });
+      };
 
-      const catchUp = (tl: gsap.core.Timeline, local: number) => {
-        if (tl.progress() >= 1) {
-          tl.timeScale(1);
+      const completeSoul = () => {
+        stopType();
+        setTyped(codeFail, CODE_FAIL, 1);
+        setTyped(codeFix, CODE_FIX, 1);
+        showPane("fix");
+        gsap.set("[data-failed],[data-error]", { autoAlpha: 0 });
+        gsap.set("[data-compiled-faith]", { autoAlpha: 1, x: 0 });
+        if (window.innerHeight > 760) {
+          gsap.set("[data-output]", { autoAlpha: 1, maxHeight: "22rem", paddingTop: "1.15em", paddingBottom: "1.25em" });
+        }
+      };
+
+      const playSoul = () => {
+        const token = ++typeGen;
+        resetSoul();
+        showPane("fail");
+        const term = stage.querySelector("[data-terminal]");
+        runType(codeFail, CODE_FAIL, 1.1, token, () => {
+          if (token !== typeGen) return;
+          gsap.fromTo("[data-failed]", { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.22 });
+          gsap.fromTo("[data-error]", { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.28 });
+          if (term) {
+            term.classList.remove("hero-terminal-fail");
+            void (term as HTMLElement).offsetWidth;
+            term.classList.add("hero-terminal-fail");
+          }
+          typing.timer = window.setTimeout(() => {
+            if (token !== typeGen) return;
+            term?.classList.remove("hero-terminal-fail");
+            gsap.to("[data-failed],[data-error]", { autoAlpha: 0, duration: 0.28 });
+            gsap.to(paneFail, {
+              autoAlpha: 0,
+              y: -14,
+              duration: 0.45,
+              ease: "power2.in",
+              onComplete() {
+                if (token !== typeGen) return;
+                setTyped(codeFail, CODE_FAIL, 0);
+                gsap.set(paneFail, { y: 0, position: "absolute", inset: 0, pointerEvents: "none" });
+                gsap.set(paneFix, {
+                  position: "relative",
+                  inset: "auto",
+                  y: 16,
+                  autoAlpha: 0,
+                  pointerEvents: "auto",
+                });
+                setTyped(codeFix, CODE_FIX, 0);
+                gsap.to(paneFix, { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" });
+                runType(codeFix, CODE_FIX, 1.45, token, () => {
+                  if (token !== typeGen) return;
+                  gsap.fromTo("[data-compiled-faith]", { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.2 });
+                  if (window.innerHeight > 760) {
+                    gsap.fromTo(
+                      "[data-output]",
+                      { autoAlpha: 0, maxHeight: 0, paddingTop: 0, paddingBottom: 0 },
+                      { autoAlpha: 1, maxHeight: "22rem", paddingTop: "1.15em", paddingBottom: "1.25em", duration: 0.32 },
+                    );
+                  }
+                });
+              },
+            });
+          }, 2000);
+        });
+      };
+
+      const globeCenter = () => {
+        if (!globe) return { x: 0, y: 0 };
+        return {
+          x: window.innerWidth * 0.5 - (globe.offsetLeft + globe.offsetWidth / 2),
+          y: window.innerHeight * 0.5 - (globe.offsetTop + globe.offsetHeight / 2),
+        };
+      };
+
+      let earthOut = false;
+      let earthTl: gsap.core.Timeline | null = null;
+
+      const restoreEarth = () => {
+        earthOut = false;
+        earthTl?.kill();
+        earthTl = null;
+        gsap.killTweensOf([globe, ".hero-stars", ".hero-glow-word"]);
+        if (globe) gsap.set(globe, { x: 0, y: 0, scale: 1, autoAlpha: 1, clearProps: "filter" });
+        if (stars) gsap.set(stars, { autoAlpha: 1, clearProps: "opacity,visibility" });
+        gsap.set(".hero-glow-word", { autoAlpha: 1, clearProps: "opacity,visibility" });
+      };
+
+      const completeEarthExit = () => {
+        earthOut = true;
+        earthTl?.kill();
+        earthTl = null;
+        gsap.killTweensOf([globe, ".hero-stars", ".hero-glow-word"]);
+        const to = globeCenter();
+        if (globe) gsap.set(globe, { x: to.x, y: to.y, scale: 0.08, autoAlpha: 0, clearProps: "filter" });
+        gsap.set(".hero-stars", { autoAlpha: 0 });
+        gsap.set(".hero-glow-word", { autoAlpha: 0 });
+      };
+
+      const playEarthExit = () => {
+        if (earthOut) return;
+        earthOut = true;
+        earthTl?.kill();
+        gsap.killTweensOf([globe, ".hero-stars", ".hero-glow-word"]);
+        const to = globeCenter();
+        // One timeline so reverse/restore can kill transform + delayed fade together.
+        // Prior split tweens (overwrite:false on autoAlpha) could finish after restore
+        // and leave the globe invisible across repeated fast bottom↔top cycles.
+        earthTl = gsap.timeline({ overwrite: true });
+        if (globe) {
+          earthTl.to(
+            globe,
+            { x: to.x, y: to.y, scale: 0.16, duration: 0.5, ease: "power2.in" },
+            0,
+          );
+          earthTl.to(globe, { autoAlpha: 0, duration: 0.24, ease: "power1.in" }, 0.28);
+        }
+        earthTl.to(".hero-stars", { autoAlpha: 0, duration: 0.36, ease: "power1.in" }, 0);
+        earthTl.to(".hero-glow-word", { autoAlpha: 0, duration: 0.24 }, 0);
+      };
+
+      const enterScene = (next: Scene, forward: boolean) => {
+        if (next === "earth") {
+          restoreEarth();
+          stopType();
+          resetSoul();
+          resetCraft();
+          showPane("craft");
           return;
         }
-        if (local >= 0.95) {
-          tl.progress(1);
+        if (next === "craft") {
+          if (forward) {
+            playEarthExit();
+            playCraft();
+          } else {
+            completeEarthExit();
+            completeCraft();
+          }
           return;
         }
-        const behind = local - tl.progress();
-        tl.timeScale(behind > 0.08 ? 1 + behind * 14 : 1).play();
+        if (next === "soul") {
+          completeEarthExit();
+          setTyped(codeOk, CODE_OK, 1);
+          gsap.set("[data-compiled]", { autoAlpha: 1, x: 0 });
+          if (forward) playSoul();
+          else completeSoul();
+        }
+      };
+      const holdCraft = { t: 0 };
+      const holdSoul = { t: 0 };
+      const holdFinale = { t: 0 };
+      const cue = stage.querySelector<HTMLElement>("[data-cue]");
+      const compiledOk = stage.querySelector<HTMLElement>("[data-compiled]");
+      const compiledFaith = stage.querySelector<HTMLElement>("[data-compiled-faith]");
+      let cueWait = 0;
+
+      const hideCue = () => {
+        if (cueWait) {
+          window.clearTimeout(cueWait);
+          cueWait = 0;
+        }
+        if (!cue) return;
+        if (Number(gsap.getProperty(cue, "autoAlpha")) < 0.04) return;
+        gsap.to(cue, { autoAlpha: 0, y: 12, duration: 0.18, overwrite: true });
+      };
+
+      const beatAllowsCue = () => {
+        if (scene === "craft") return !!compiledOk && Number(getComputedStyle(compiledOk).opacity) > 0.55;
+        if (scene === "soul") return !!compiledFaith && Number(getComputedStyle(compiledFaith).opacity) > 0.55;
+        return false;
+      };
+
+      const armCue = () => {
+        if (cueWait) window.clearTimeout(cueWait);
+        if (scene !== "craft" && scene !== "soul") return;
+        const ready = beatAllowsCue();
+        cueWait = window.setTimeout(() => {
+          cueWait = 0;
+          if (scene !== "craft" && scene !== "soul") return;
+          if (!beatAllowsCue()) {
+            armCue();
+            return;
+          }
+          gsap.to(cue, { autoAlpha: 1, y: 0, duration: 0.45, overwrite: true });
+        }, ready ? 2000 : 450);
       };
 
       const scrub = gsap.timeline({
@@ -342,111 +479,89 @@ export function Hero() {
         scrollTrigger: {
           trigger: stage,
           start: "top top",
-          end: "bottom bottom",
-          scrub: 0.28,
+          end: () => `+=${Math.round(window.innerHeight * 2.15)}`,
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: 1,
+          // 1:1 with scroll — numeric scrub left progress lagging real scrollY in Chrome,
+          // so reverse enterScene(completeEarthExit) could finish while progress stayed > 0.05
+          // and leave the globe stuck at scale 0.08 / autoAlpha 0 at the top.
+          scrub: true,
           invalidateOnRefresh: true,
           onUpdate(self) {
             const anim = self.animation as gsap.core.Timeline;
             const t = anim.time();
-            const craftAt = anim.labels.craftPlay ?? 0;
-            const bookAt = anim.labels.book ?? 0;
-            const soulAt = anim.labels.soul ?? 0;
-            const soulPlayAt = anim.labels.soulPlay ?? 0;
-            const finaleAt = anim.labels.finale ?? 0;
-
-            if (t >= craftAt && t < bookAt) {
-              catchUp(craftPlay, (t - craftAt) / Math.max(0.001, bookAt - craftAt));
-            } else if (t >= bookAt && craftPlay.progress() < 1) {
-              craftPlay.progress(1);
+            const range = Math.max(1, self.end - self.start);
+            const real = gsap.utils.clamp(0, 1, (self.scroll() - self.start) / range);
+            // Hide from real scroll (not scrubbed progress) so exit tracks the wheel.
+            if (real >= 0.05) playEarthExit();
+            const craftAt = anim.labels.craft ?? 0.72;
+            const soulAt = anim.labels.soul ?? 1.43;
+            const finaleAt = anim.labels.finale ?? 2.15;
+            const next: Scene = t < craftAt ? "earth" : t < soulAt ? "craft" : t < finaleAt ? "soul" : "finale";
+            if (next !== scene) {
+              const order = { earth: 0, craft: 1, soul: 2, finale: 3 };
+              const forward = order[next] > order[scene];
+              scene = next;
+              stage.classList.toggle("is-finale", next === "finale");
+              enterScene(next, forward);
+            } else if (next === "craft" && paneFix && Number(getComputedStyle(paneFix).opacity) > 0.5) {
+              completeCraft();
             }
-
-            if (t >= bookAt && t < soulAt) {
-              catchUp(bookPlay, (t - bookAt) / Math.max(0.001, soulAt - bookAt));
-            } else if (t >= soulAt && bookPlay.progress() < 1) {
-              bookPlay.progress(1);
-            }
-
-            if (t >= soulPlayAt && t < finaleAt) {
-              if (craftPlay.progress() < 1) craftPlay.progress(1);
-              if (bookPlay.progress() < 1) bookPlay.progress(1);
-              catchUp(soulPlay, (t - soulPlayAt) / Math.max(0.001, finaleAt - soulPlayAt));
-            } else if (t >= finaleAt) {
-              if (craftPlay.progress() < 1) craftPlay.progress(1);
-              if (bookPlay.progress() < 1) bookPlay.progress(1);
-              if (soulPlay.progress() < 1) soulPlay.progress(1);
-              hideCue();
-            }
+            // Real scroll wins last: reverse scene snaps (completeEarthExit) must not
+            // leave the globe hidden when the pin is actually back at the start.
+            if (real < 0.05) restoreEarth();
           },
         },
       });
 
       scrub
-        .addLabel("craft")
-        .to("[data-cue]", { autoAlpha: 0, duration: 0.18 })
-        .to(".hero-motes", { autoAlpha: 0, duration: 0.18 }, "<")
-        .to(".hero-grid", { autoAlpha: 1, duration: 0.45 }, "<")
-        .to(".hero-glow-code", { autoAlpha: 0.45, duration: 0.35 }, "<")
-        .to("[data-phrase-a]", { fontSize: captionSize, duration: 0.45 }, "<")
-        .to(".story-stack", { gap: "0.7rem", duration: 0.45 }, "<")
-        .to(
-          ".story-cluster",
-          { height: clusterCraft, autoAlpha: 1, overflow: "visible", scale: 1, duration: 0.45 },
-          "<",
-        )
-        .fromTo("[data-brace-right]", { autoAlpha: 0, x: 28 }, { autoAlpha: 1, x: 0, duration: 0.28 }, ">-0.08")
+        .addLabel("earth")
+        .fromTo("[data-cue]", { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: 12, duration: 0.3 }, 0)
+        .to(".hero-motes", { autoAlpha: 0, duration: 0.4 }, 0)
+        .to(copy, { y: copyLift, duration: 1.05 }, 0.08)
+        .to(termSlot, { y: termLift, duration: 1.05 }, 0.08)
         .fromTo(
-          "[data-phrase-b]",
-          { autoAlpha: 0, y: 18 },
-          { autoAlpha: 1, y: 0, height: "auto", overflow: "visible", marginTop: "0.28em", duration: 0.24 },
+          phraseA,
+          { "--hero-type": loadType },
+          { "--hero-type": captionType, duration: 1.05 },
+          0.08,
         )
-        .to("[data-term-slot]", { gridTemplateRows: "1fr", duration: 0.22 }, "<")
-        .to("[data-terminal]", { autoAlpha: 1, duration: 0.22 }, "<")
-        .addLabel("craftPlay")
-        .to({ hold: 0 }, { hold: 1, duration: 0.7 })
-        .addLabel("book")
-        .to("[data-cue]", { autoAlpha: 0, duration: 0.15 })
-        .to({ hold: 0 }, { hold: 1, duration: 0.7 })
-        .addLabel("soul")
-        .to("[data-cue]", { autoAlpha: 0, duration: 0.15 })
-        .set("[data-pane-craft]", { display: "none" })
-        .set("[data-pane-fail]", { display: "block" })
-        .set("[data-code-ok]", { textContent: "" })
-        .to("[data-term-slot]", { gridTemplateRows: "1fr", duration: 0.32 })
-        .to("[data-terminal]", { autoAlpha: 1, duration: 0.32 }, "<")
-        .addLabel("soulPlay")
-        .to({ hold: 0 }, { hold: 1, duration: 0.75 })
-        .addLabel("finale")
-        .to("[data-cue]", { autoAlpha: 0, duration: 0.15 })
-        .to("[data-terminal]", { autoAlpha: 0, duration: 0.24 })
-        .to("[data-term-slot]", { gridTemplateRows: "0fr", duration: 0.28 }, "<")
-        .to(".story-stack", { gap: "1.25rem", duration: 0.5 }, "<")
-        .to(".story-cluster", { height: clusterFinale, duration: 0.5 }, "<")
-        .to("[data-phrase-a]", { fontSize: finaleA, duration: 0.5 }, "<")
-        .to("[data-phrase-b]", { fontSize: finaleB, duration: 0.5 }, "<")
-        .to("[data-phrase-c]", { autoAlpha: 1, height: "auto", overflow: "visible", marginTop: "0.22em", duration: 0.28 }, "<")
-        .to("[data-deep-word]", { autoAlpha: 1, y: 0, duration: 0.28 }, "<")
-        .to("[data-phrase-c]", { fontSize: finaleC, duration: 0.5 }, "<")
+        .to("[data-cluster]", { autoAlpha: 1, y: 0, scale: 1, duration: 0.4 }, 0.22)
+        .to("[data-phrase-b]", { autoAlpha: 1, y: 0, duration: 0.42 }, 0.26)
+        .to(".hero-grid", { autoAlpha: 1, duration: 0.5 }, 0.18)
+        .to(".hero-glow-code", { autoAlpha: 0.5, duration: 0.4 }, 0.24)
+        .to("[data-terminal]", { autoAlpha: 1, y: 0, duration: 0.48 }, 0.42)
+        .addLabel("craft", 0.72)
+        .addLabel("departed", 1.05)
+        .to(holdCraft, { t: 1, duration: 0.38 }, 1.05)
+        .addLabel("soul", 1.43)
+        .to(holdSoul, { t: 1, duration: 0.72 }, 1.43)
+        .addLabel("finale", 2.15)
+        .to("[data-terminal]", { autoAlpha: 0, y: 16, duration: 0.38 }, "finale")
+        .to("[data-cluster]", { autoAlpha: 0, y: -8, duration: 0.3 }, "finale")
+        .to(".hero-grid", { autoAlpha: 0.28, duration: 0.38 }, "finale")
+        .to(copy, { y: copyFinale, duration: 0.42 }, "finale")
+        .to("[data-phrase-c]", { autoAlpha: 1, y: 0, duration: 0.38 }, "finale+=0.08")
+        .to("[data-deep-word]", { autoAlpha: 1, y: 0, scale: 1, duration: 0.32, stagger: 0.05 }, "finale+=0.08")
         .to(
           "[data-doors]",
-          {
-            autoAlpha: 1,
-            height: () => doors?.scrollHeight ?? 140,
-            overflow: "visible",
-            pointerEvents: "auto",
-            duration: 0.32,
-          },
+          { autoAlpha: 1, y: 0, pointerEvents: "auto", duration: 0.38 },
+          "finale+=0.12",
         )
-        .to({ hold: 0 }, { hold: 1, duration: 0.55 });
-
-      story.scrub = scrub;
+        .to(holdFinale, { t: 1, duration: 0.5 }, "finale+=0.4");
     }, root);
 
-    const refresh = window.setTimeout(() => ScrollTrigger.refresh(), 300);
+    const refresh = window.setTimeout(() => ScrollTrigger.refresh(), 280);
     return () => {
+      stage.classList.remove("is-finale");
       window.clearTimeout(refresh);
+      typing.gen += 1;
+      if (typing.raf) cancelAnimationFrame(typing.raf);
+      if (typing.timer) window.clearTimeout(typing.timer);
       ctx.revert();
     };
-  }, [headReady, bookReady, reduce, replay]);
+  }, [reduce, replay, coarse]);
 
   useEffect(() => {
     const stage = root.current;
@@ -457,10 +572,13 @@ export function Hero() {
     let markReveal: gsap.core.Timeline | null = null;
     let introDone = false;
     let idleOn = false;
+    let marksRevealed = false;
+    let settleTimer = 0;
+    const NEAR_TOP = 8;
     const word = () => stage.querySelector<HTMLElement>("[data-emphasis]");
     const glow = () => stage.querySelector<HTMLElement>(".hero-glow-code");
     const world = () => stage.querySelector<HTMLElement>("[data-hero-world]");
-    const atTop = () => window.scrollY <= 4;
+    const atTop = () => window.scrollY <= NEAR_TOP;
 
     const stopBreath = () => {
       if (breath) {
@@ -473,11 +591,36 @@ export function Hero() {
       if (light) gsap.set(light, { scale: 1, opacity: 1 });
     };
 
-    const stopWorld = () => {
+    const pauseBreath = () => {
+      breath?.pause();
+    };
+
+    // World + globe must track real scroll every cycle. Idle start/stop and scrubbed
+    // progress races leave [data-hero-world] / .hero-globe hidden after fast reverses.
+    const syncWorldToScroll = () => {
       const layer = world();
-      if (!layer) return;
+      if (!layer || !introDone) return;
+      const show = atTop();
       gsap.killTweensOf(layer);
-      gsap.to(layer, { autoAlpha: 0, duration: 0.4, overwrite: true });
+      if (!show) {
+        gsap.set(layer, { autoAlpha: 0 });
+        return;
+      }
+      gsap.set(layer, { autoAlpha: 1 });
+      // Belt-and-suspenders: if ScrollTrigger onUpdate stalled mid-reverse scene snap,
+      // force the globe back when the page is actually at the top.
+      const globeEl = stage.querySelector<HTMLElement>(".hero-globe");
+      const starsEl = stage.querySelector<HTMLElement>(".hero-stars");
+      if (globeEl) {
+        gsap.killTweensOf(globeEl);
+        gsap.set(globeEl, { x: 0, y: 0, scale: 1, autoAlpha: 1, clearProps: "filter" });
+      }
+      if (starsEl) {
+        gsap.killTweensOf(starsEl);
+        gsap.set(starsEl, { autoAlpha: 1, clearProps: "opacity,visibility" });
+      }
+      gsap.killTweensOf(".hero-glow-word");
+      gsap.set(".hero-glow-word", { autoAlpha: 1, clearProps: "opacity,visibility" });
     };
 
     const measureInk = (el: HTMLElement, text: string) => {
@@ -596,7 +739,10 @@ export function Hero() {
       h1.classList.toggle("is-wrap", wrap);
       h1.classList.toggle("is-single", !wrap);
       h1.style.setProperty("--hero-type", `${size.toFixed(2)}px`);
-      if (window.scrollY <= 8) h1.style.fontSize = "";
+      if (window.scrollY <= 8) {
+        h1.style.fontSize = "";
+        h1.style.setProperty("--hero-load", `${size.toFixed(2)}px`);
+      }
     };
 
     const syncLoveLayout = () => {
@@ -639,11 +785,7 @@ export function Hero() {
       });
     };
 
-    const stopIdle = () => {
-      if (!idleOn && !breath && !loveSwap) return;
-      idleOn = false;
-      markReveal?.kill();
-      markReveal = null;
+    const settlePeriod = () => {
       gsap.killTweensOf("[data-title-dot]");
       gsap.set("[data-title-dot]", {
         x: 0,
@@ -655,25 +797,27 @@ export function Hero() {
         autoAlpha: 1,
         transformOrigin: "50% 100%",
       });
-      setMarksOn(false);
-      stopBreath();
-      stopLove();
-      stopWorld();
     };
 
-    const startIdle = () => {
-      if (idleOn || !introDone || !atTop()) return;
-      idleOn = true;
+    const stopIdle = () => {
+      if (!idleOn && !breath && !loveSwap && !markReveal) return;
+      idleOn = false;
+      markReveal?.kill();
+      markReveal = null;
+      settlePeriod();
+      // Once marks/traveler have been revealed, keep them running across scroll away/back
+      // so return-to-top continues instead of replaying the period hop + traveler restart.
+      if (!marksRevealed) marksOn.current = false;
+      pauseBreath();
+      loveSwap?.pause();
+      syncWorldToScroll();
+    };
 
-      const layer = world();
-      if (layer) {
-        gsap.fromTo(
-          layer,
-          { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 1.8, delay: 0.25, ease: "power1.out", overwrite: true },
-        );
+    const ensureBreath = () => {
+      if (breath) {
+        breath.play();
+        return;
       }
-
       const el = word();
       const light = glow();
       if (el) gsap.set(el, { transformOrigin: "50% 90%", y: 0, scale: 1 });
@@ -685,17 +829,46 @@ export function Hero() {
       });
       if (el) breath.to(el, { y: -4, scale: 1.012 }, 0);
       if (light) breath.to(light, { scale: 1.28, opacity: 0.52 }, 0);
+    };
 
-      gsap.set("[data-title-dot]", {
-        x: 0,
-        y: 0,
-        scale: 1,
-        scaleX: 1,
-        scaleY: 1,
-        autoAlpha: 1,
-        rotate: 0,
-        transformOrigin: "50% 100%",
-      });
+    const ensureLove = () => {
+      if (loveSwap) {
+        loveSwap.play();
+        return;
+      }
+      syncLoveLayout();
+      const slot = loveSlot();
+      const hold = 2.4;
+      gsap.set("[data-love-en]", { autoAlpha: 1, y: 0, scale: 1, rotateX: 0 });
+      gsap.set("[data-love-sign],[data-love-zh],[data-love-hi],[data-love-th]", { autoAlpha: 0, y: 0, scale: 1, rotateX: 0 });
+
+      const swap = (from: string, to: string) => {
+        const step = gsap.timeline();
+        step
+          .to(from, { autoAlpha: 0, duration: 0.55, ease: "power1.inOut" })
+          .to(to, { autoAlpha: 1, duration: 0.55, ease: "power1.inOut" }, "<");
+        if (slot) {
+          step.to(slot, { width: () => `${slotWidthFor(to)}px`, duration: 0.55, ease: "power2.inOut" }, "<");
+        }
+        return step;
+      };
+
+      loveSwap = gsap.timeline({ delay: 2.2, repeat: -1 });
+      loveSwap
+        .add(swap(loveFaces[0], loveFaces[1]))
+        .to({}, { duration: hold })
+        .add(swap(loveFaces[1], loveFaces[2]))
+        .to({}, { duration: hold })
+        .add(swap(loveFaces[2], loveFaces[3]))
+        .to({}, { duration: hold })
+        .add(swap(loveFaces[3], loveFaces[4]))
+        .to({}, { duration: hold })
+        .add(swap(loveFaces[4], loveFaces[0]))
+        .to({}, { duration: hold });
+    };
+
+    const playMarkReveal = () => {
+      settlePeriod();
       markReveal = gsap.timeline({ delay: 1.05, defaults: { ease: "power2.out" } });
       markReveal
         .to("[data-title-dot]", { y: "-0.38em", duration: 0.18 })
@@ -750,7 +923,10 @@ export function Hero() {
           },
           phone ? "launch+=0.66" : "launch+=0.28",
         )
-        .add(() => setMarksOn(true), phone ? "launch+=0.78" : "launch+=0.5")
+        .add(() => {
+          marksOn.current = true;
+          marksRevealed = true;
+        }, phone ? "launch+=0.78" : "launch+=0.5")
         .to({}, { duration: 3 })
         .set("[data-title-dot]", {
           x: 0,
@@ -767,40 +943,38 @@ export function Hero() {
           duration: 0.5,
           ease: "power2.out",
         });
+    };
 
-      syncLoveLayout();
-      const slot = loveSlot();
-      const hold = 2.4;
-      gsap.set("[data-love-en]", { autoAlpha: 1, y: 0, scale: 1, rotateX: 0 });
-      gsap.set("[data-love-sign],[data-love-zh],[data-love-hi],[data-love-th]", { autoAlpha: 0, y: 0, scale: 1, rotateX: 0 });
-
-      const swap = (from: string, to: string) => {
-        const step = gsap.timeline();
-        step
-          .to(from, { autoAlpha: 0, duration: 0.55, ease: "power1.inOut" })
-          .to(to, { autoAlpha: 1, duration: 0.55, ease: "power1.inOut" }, "<");
-        if (slot) {
-          step.to(slot, { width: () => `${slotWidthFor(to)}px`, duration: 0.55, ease: "power2.inOut" }, "<");
-        }
-        return step;
-      };
-
-      loveSwap = gsap.timeline({ delay: 2.2, repeat: -1 });
-      loveSwap
-        .add(swap(loveFaces[0], loveFaces[1]))
-        .to({}, { duration: hold })
-        .add(swap(loveFaces[1], loveFaces[2]))
-        .to({}, { duration: hold })
-        .add(swap(loveFaces[2], loveFaces[3]))
-        .to({}, { duration: hold })
-        .add(swap(loveFaces[3], loveFaces[4]))
-        .to({}, { duration: hold })
-        .add(swap(loveFaces[4], loveFaces[0]))
-        .to({}, { duration: hold });
+    const startIdle = () => {
+      if (idleOn || !introDone || !atTop()) return;
+      idleOn = true;
+      syncWorldToScroll();
+      ensureBreath();
+      if (marksRevealed) {
+        marksOn.current = true;
+        settlePeriod();
+      } else {
+        playMarkReveal();
+      }
+      ensureLove();
     };
 
     const onScroll = () => {
-      if (window.scrollY > 8) stopIdle();
+      syncWorldToScroll();
+      if (window.scrollY > NEAR_TOP) stopIdle();
+      else if (introDone) startIdle();
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        syncWorldToScroll();
+        if (window.scrollY > NEAR_TOP) stopIdle();
+        else if (introDone) startIdle();
+      }, 120);
+    };
+
+    const onScrollEnd = () => {
+      window.clearTimeout(settleTimer);
+      syncWorldToScroll();
+      if (window.scrollY > NEAR_TOP) stopIdle();
       else if (introDone) startIdle();
     };
 
@@ -829,12 +1003,14 @@ export function Hero() {
 
       intro.eventCallback("onComplete", () => {
         introDone = true;
+        syncWorldToScroll();
         if (atTop()) startIdle();
         else stopIdle();
       });
     }, root);
 
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scrollend", onScrollEnd);
 
     let resizeRaf = 0;
     let lastPhraseW = 0;
@@ -867,12 +1043,22 @@ export function Hero() {
 
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scrollend", onScrollEnd);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
       phraseWatch.disconnect();
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
-      stopIdle();
+      window.clearTimeout(settleTimer);
+      markReveal?.kill();
+      markReveal = null;
+      stopBreath();
+      stopLove();
+      marksOn.current = false;
+      marksRevealed = false;
+      idleOn = false;
+      const layer = world();
+      if (layer) gsap.killTweensOf(layer);
       ctx.revert();
     };
   }, [reduce, replay]);
@@ -885,8 +1071,8 @@ export function Hero() {
           <p className="text-3xl sm:text-5xl lg:text-6xl">
             I love solving <span className="text-accent">problems</span>.
           </p>
-          <p className="mt-3 text-3xl sm:text-5xl lg:text-6xl">Some of them take code.</p>
-          <p className="mt-5 text-4xl text-scripture sm:text-6xl lg:text-7xl">The deepest ones take Jesus.</p>
+          <p className="mt-3 text-xl sm:text-2xl lg:text-3xl">Some of them take code.</p>
+          <p className="mt-5 text-4xl text-scripture sm:text-6xl lg:text-7xl">The rest take Jesus.</p>
         </div>
         <div className="flex flex-col items-center gap-4 sm:flex-row">
           <Link href="/sermons/" className="magnetic door door-loud">Listen</Link>
@@ -901,203 +1087,183 @@ export function Hero() {
 
   return (
     <section ref={root} className="story-root relative bg-field text-study">
-      <div className="story-track">
-        <div className="story-stage">
-          <div className="hero-field" aria-hidden>
-            <div className="hero-grid" />
-            <div className="hero-stars" aria-hidden>
-              {HERO_STARS.map(([left, top, size, delay, mag], i) => (
-                <span
-                  key={`${left}-${top}`}
-                  className={`hero-star ${STAR_TINTS[i % 3]} ${i % 3 === 1 ? "is-flutter" : ""}`.trim()}
-                  style={{
-                    left: `${left}%`,
-                    top: `${top}%`,
-                    width: `${size}px`,
-                    height: `${size}px`,
-                    ["--star-mag" as string]: mag,
-                    ["--star-period" as string]: `${7.2 + (i % 5) * 1.6}s`,
-                    animationDelay: `${delay}s`,
-                  }}
-                />
-              ))}
-            </div>
-            <div className="hero-world" data-hero-world>
-              <div className="hero-globe-stage">
-                <div className="hero-globe">
-                  <HeroGlobe marksOn={marksOn} />
-                  <div className="hero-globe-atmos" />
-                  <div className="hero-globe-flare" aria-hidden>
-                    <span className="hero-globe-flare-glow" />
-                    <span className="hero-globe-flare-core" />
-                    <span className="hero-globe-flare-streak" />
-                  </div>
+      <div className="story-stage">
+        <div className="hero-field" aria-hidden>
+          <div className="hero-grid" />
+          <div className="hero-stars" aria-hidden>
+            {HERO_STARS.map(([left, top, size, delay, mag], i) => (
+              <span
+                key={`${left}-${top}`}
+                className={`hero-star ${STAR_TINTS[i % 3]} ${i % 3 === 1 ? "is-flutter" : ""}`.trim()}
+                style={{
+                  left: `${left}%`,
+                  top: `${top}%`,
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  ["--star-mag" as string]: mag,
+                  ["--star-period" as string]: `${7.2 + (i % 5) * 1.6}s`,
+                  animationDelay: `${delay}s`,
+                }}
+              />
+            ))}
+          </div>
+          <div className="hero-world" data-hero-world>
+            <div className="hero-globe-stage">
+              <div className="hero-globe">
+                <HeroGlobe marksOn={marksOn} />
+                <div className="hero-globe-atmos" />
+                <div className="hero-globe-flare" aria-hidden>
+                  <span className="hero-globe-flare-glow" />
+                  <span className="hero-globe-flare-core" />
+                  <span className="hero-globe-flare-streak" />
                 </div>
               </div>
-            </div>
-            <div className="hero-glow-code" />
-            <div className="hero-glow-word" />
-            <div className="hero-motes">
-              <span className="hero-mote" style={{ left: "46%", top: "58%", animationDelay: "0s" }} />
-              <span className="hero-mote" style={{ left: "52%", top: "62%", animationDelay: "-3s" }} />
-              <span className="hero-mote" style={{ left: "41%", top: "54%", animationDelay: "-6s" }} />
-              <span className="hero-mote" style={{ left: "57%", top: "50%", animationDelay: "-9s" }} />
-              <span className="hero-mote" style={{ left: "49%", top: "66%", animationDelay: "-12s" }} />
-              <span className="hero-mote" style={{ left: "38%", top: "48%", animationDelay: "-4s" }} />
-              <span className="hero-mote" style={{ left: "61%", top: "56%", animationDelay: "-8s" }} />
-              <span className="hero-mote" style={{ left: "44%", top: "44%", animationDelay: "-1s" }} />
             </div>
           </div>
+          <div className="hero-glow-code" />
+          <div className="hero-glow-word" />
+          <div className="hero-motes">
+            <span className="hero-mote" style={{ left: "46%", top: "58%", animationDelay: "0s" }} />
+            <span className="hero-mote" style={{ left: "52%", top: "62%", animationDelay: "-3s" }} />
+            <span className="hero-mote" style={{ left: "41%", top: "54%", animationDelay: "-6s" }} />
+            <span className="hero-mote" style={{ left: "57%", top: "50%", animationDelay: "-9s" }} />
+            <span className="hero-mote" style={{ left: "49%", top: "66%", animationDelay: "-12s" }} />
+            <span className="hero-mote" style={{ left: "38%", top: "48%", animationDelay: "-4s" }} />
+            <span className="hero-mote" style={{ left: "61%", top: "56%", animationDelay: "-8s" }} />
+            <span className="hero-mote" style={{ left: "44%", top: "44%", animationDelay: "-1s" }} />
+          </div>
+        </div>
 
-          <div className="story-cast">
-            <div className="story-stack">
-              <div className="story-cluster">
-                <div data-brace-left className="story-brace story-brace-left">
-                  <InlineSvg src="/bracket-left.svg" className="nh-brace-left" />
-                </div>
-                <div data-head className="story-head">
-                  <InlineSvg
-                    src="/NickCartoonHead.svg"
-                    className="nh-head"
-                    title="Nick Perkins"
-                    onReady={onHeadReady}
-                  />
-                </div>
-                <div data-brace-right className="story-brace story-brace-right">
-                  <InlineSvg src="/bracket-right.svg" className="nh-brace-right" />
-                </div>
-                <div data-bible className="story-bible" aria-hidden>
-                  <InlineSvg src="/bracket-book-left.svg" className="nh-book" onReady={onBookReady} />
-                </div>
+        <div className="story-cast">
+          <div data-copy className="story-copy">
+            <div data-cluster className="story-cluster" aria-hidden>
+              <div data-brace-left className="story-brace story-brace-left">
+                <InlineSvg src="/bracket-left.svg" className="nh-brace-left" />
               </div>
+              <div data-head className="story-head">
+                <InlineSvg src="/NickCartoonHead.svg" className="nh-head" title="Nick Perkins" />
+              </div>
+              <div data-brace-right className="story-brace story-brace-right">
+                <InlineSvg src="/bracket-right.svg" className="nh-brace-right" />
+              </div>
+            </div>
 
-              <div data-phrase className="story-phrase">
-                <h1 data-phrase-a className="story-phrase-a">
-                  <span data-title-word>I</span>{" "}
-                  <span data-title-word data-love className="story-love" aria-label="love">
-                    <span data-love-en className="story-love-word" aria-hidden>
-                      love
-                    </span>
-                    <span data-love-sign className="story-love-sign" aria-hidden>
-                      <InlineSvg src="/love-sign-vector.svg" className="nh-love-sign" title="Love in American Sign Language" />
-                    </span>
-                    <span data-love-zh lang="zh-Hans" className="story-love-zh" aria-hidden>
-                      <span className="story-love-strut">love</span>
-                      <span className="story-love-face">爱</span>
-                    </span>
-                    <span data-love-hi lang="hi" className="story-love-hi" aria-hidden>
-                      <span className="story-love-strut">love</span>
-                      <span className="story-love-face">बहुत शौक है</span>
-                    </span>
-                    <span data-love-th lang="th" className="story-love-th" aria-hidden>
-                      <span className="story-love-strut">love</span>
-                      <span className="story-love-face">ชอบมาก</span>
-                    </span>
-                  </span>{" "}
-                  <span className="story-phrase-tail">
-                    <span data-title-word data-solving>solving</span>{" "}
-                    <span data-title-word data-emphasis>
-                      problems
-                    </span>
-                    <span data-title-dot>.</span>
+            <div data-phrase className="story-phrase">
+              <h1 data-phrase-a className="story-phrase-a">
+                <span data-title-word>I</span>{" "}
+                <span data-title-word data-love className="story-love" aria-label="love">
+                  <span data-love-en className="story-love-word" aria-hidden>
+                    love
                   </span>
-                </h1>
+                  <span data-love-sign className="story-love-sign" aria-hidden>
+                    <InlineSvg src="/love-sign-vector.svg" className="nh-love-sign" title="Love in American Sign Language" />
+                  </span>
+                  <span data-love-zh lang="zh-Hans" className="story-love-zh" aria-hidden>
+                    <span className="story-love-strut">love</span>
+                    <span className="story-love-face">爱</span>
+                  </span>
+                  <span data-love-hi lang="hi" className="story-love-hi" aria-hidden>
+                    <span className="story-love-strut">love</span>
+                    <span className="story-love-face">बहुत शौक है</span>
+                  </span>
+                  <span data-love-th lang="th" className="story-love-th" aria-hidden>
+                    <span className="story-love-strut">love</span>
+                    <span className="story-love-face">ชอบมาก</span>
+                  </span>
+                </span>{" "}
+                <span className="story-phrase-tail">
+                  <span data-title-word data-solving>solving</span>{" "}
+                  <span data-title-word data-emphasis>
+                    problems
+                  </span>
+                  <span data-title-dot>.</span>
+                </span>
+              </h1>
+              <div className="story-phrase-rest">
                 <p data-phrase-b className="story-phrase-b">
                   Some of them take code.
                 </p>
                 <p data-phrase-c className="story-phrase-c">
-                  <span data-deep-word>The</span> <span data-deep-word>deepest</span>{" "}
-                  <span data-deep-word>ones</span> <span data-deep-word>take</span>{" "}
-                  <span data-deep-word>Jesus.</span>
+                  <span data-deep-word>The</span> <span data-deep-word>rest</span>{" "}
+                  <span data-deep-word>take</span>{" "}
+                  <span data-deep-word data-jesus>Jesus.</span>
                 </p>
               </div>
+            </div>
+          </div>
 
-              <div data-term-slot className="story-term-slot">
-                <div className="story-term-slot-inner">
-                  <div data-terminal className="story-terminal">
-                    <div className="story-terminal-window">
-                      <article data-pane data-pane-craft>
-                        <p className="story-terminal-file">craft.ts</p>
-                        <pre data-code-ok className="story-code" />
-                        <p data-compiled className="story-terminal-status text-accent">
-                          <StatusCheck />
-                          compiled
-                        </p>
-                      </article>
-                      <article data-pane data-pane-fail>
-                        <p className="story-terminal-file">soul.ts</p>
-                        <pre data-code-fail className="story-code" />
-                        <p data-failed className="story-terminal-status text-accent">
-                          <StatusStop />
-                          failed
-                        </p>
-                        <pre data-error className="story-code story-terminal-error">
-                          {`error TS2304: Cannot find name 'me'.
+          <div data-term-slot className="story-term-slot">
+            <div data-terminal className="story-terminal">
+              <div className="story-terminal-window">
+                <article data-pane data-pane-craft>
+                  <p className="story-terminal-file">craft.ts</p>
+                  <pre data-code-ok className="story-code" />
+                  <p data-compiled className="story-terminal-status text-accent">
+                    <StatusCheck />
+                    compiled
+                  </p>
+                </article>
+                <article data-pane data-pane-fail>
+                  <p className="story-terminal-file">soul.ts</p>
+                  <pre data-code-fail className="story-code" />
+                  <p data-failed className="story-terminal-status text-accent">
+                    <StatusStop />
+                    failed
+                  </p>
+                  <pre data-error className="story-code story-terminal-error">
+                    {`error TS2304: Cannot find name 'me'.
 error TS2304: Cannot find name 'Peace'.`}
-                        </pre>
-                      </article>
-                      <article data-pane data-pane-fix>
-                        <p className="story-terminal-file">soul.ts</p>
-                        <pre data-code-fix className="story-code" />
-                        <p data-compiled-faith className="story-terminal-status text-scripture">
-                          <StatusCheck />
-                          compiled
-                        </p>
-                      </article>
-                    </div>
-                    <div data-output className="story-terminal-output">
-                      <p className="font-display leading-snug text-scripture">
-                        “Therefore, since we have been justified by faith, we have peace with God through our Lord Jesus Christ.”
-                      </p>
-                      <p className="font-ui tracking-[0.28em] text-scripture/70 uppercase">
-                        Romans 5:1
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  </pre>
+                </article>
+                <article data-pane data-pane-fix>
+                  <p className="story-terminal-file">soul.ts</p>
+                  <pre data-code-fix className="story-code" />
+                  <p data-compiled-faith className="story-terminal-status text-scripture">
+                    <StatusCheck />
+                    compiled
+                  </p>
+                </article>
               </div>
-            </div>
-
-            <div data-doors className="story-doors">
-              <div className="flex w-[min(92vw,28rem)] flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <Link href="/sermons/" className="magnetic door door-loud w-full sm:w-auto">Listen</Link>
-                <Link href="/writing/" className="magnetic door door-loud w-full sm:w-auto">Read</Link>
+              <div data-output className="story-terminal-output">
+                <p className="font-display leading-snug text-scripture">
+                  “Therefore, since we have been justified by faith, we have peace with God through our Lord Jesus Christ.”
+                </p>
+                <p className="font-ui tracking-[0.28em] text-scripture/70 uppercase">
+                  Romans 5:1
+                </p>
               </div>
-              <Link href="/work/" className="mt-5 font-ui text-sm tracking-wide text-study/55 hover:text-accent">
-                or see the work
-              </Link>
             </div>
           </div>
 
-          <p
-            data-word
-            className="story-word pointer-events-none absolute left-1/2 top-[min(5.5rem,10.5svh)] z-[21] w-[min(90vw,40rem)] -translate-x-1/2 text-center font-display text-[clamp(1.05rem,2.7vw,1.85rem)] leading-snug text-scripture"
-          >
-            “Come to me, all who labor and are heavy laden, and I will give you rest.”
-            <span className="mt-3 block font-ui text-[0.65rem] tracking-[0.28em] text-scripture/70 uppercase">
-              Matthew 11:28
-            </span>
-          </p>
-
-          <div data-cue className="story-cue" aria-hidden>
-            {coarse ? (
-              <>
-                <span className="hero-chevron text-xl text-study/70">↑</span>
-                <span className="mt-2 font-ui text-[0.65rem] tracking-[0.32em] text-study/55 uppercase">
-                  Swipe up
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="scroll-mouse">
-                  <span className="scroll-wheel" />
-                </span>
-                <span className="mt-2 font-ui text-[0.65rem] tracking-[0.32em] text-study/55 uppercase">
-                  Scroll
-                </span>
-              </>
-            )}
+          <div data-doors className="story-doors">
+            <div className="flex w-[min(92vw,28rem)] flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Link href="/sermons/" className="magnetic door door-loud w-full sm:w-auto">Listen</Link>
+              <Link href="/writing/" className="magnetic door door-loud w-full sm:w-auto">Read</Link>
+            </div>
+            <Link href="/work/" className="mt-5 font-ui text-sm tracking-wide text-study/55 hover:text-accent">
+              or see the work
+            </Link>
           </div>
+        </div>
+
+        <div data-cue className="story-cue" aria-hidden>
+          {coarse ? (
+            <>
+              <span className="hero-chevron text-xl text-study/70">↑</span>
+              <span className="mt-2 font-ui text-[0.65rem] tracking-[0.32em] text-study/55 uppercase">
+                Swipe up
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="scroll-mouse">
+                <span className="scroll-wheel" />
+              </span>
+              <span className="mt-2 font-ui text-[0.65rem] tracking-[0.32em] text-study/55 uppercase">
+                Scroll
+              </span>
+            </>
+          )}
         </div>
       </div>
     </section>

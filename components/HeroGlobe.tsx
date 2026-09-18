@@ -262,10 +262,9 @@ function compile(gl: WebGLRenderingContext, type: number, source: string) {
   return shader;
 }
 
-export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
+export function HeroGlobe({ marksOn }: { marksOn: { current: boolean } }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const marksOnRef = useRef(marksOn);
-  marksOnRef.current = marksOn;
+  const marksOnRef = marksOn;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -354,10 +353,12 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
       markAlpha += (target - markAlpha) * 0.055;
       const dt = lastNow ? Math.min(0.05, (now - lastNow) / 1000) : 0;
       lastNow = now;
-      if (!marksOnRef.current || markAlpha < 0.62) {
+      // Only clear the traveler when marks are fully off — don't reset mid-fade or
+      // across brief hide/show so return-to-top continues the route instead of hopping.
+      if (!marksOnRef.current && markAlpha < 0.02) {
         travelTime = 0;
         trail.fill(0);
-      } else if (playing) {
+      } else if (marksOnRef.current && markAlpha >= 0.62 && playing) {
         travelTime += dt;
         fillTrail(route, travelTime, trail);
       }
@@ -370,9 +371,13 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     };
 
+    // Wall-clock spin from an origin captured once — continues seamlessly across
+    // visibility pauses because rotation is absolute, not tied to rAF start.
+    const spinOrigin = performance.now();
+
     const tick = (now: number) => {
       if (!alive) return;
-      const rot = START_ROT + ((now / 1000) * Math.PI * 2) / SPIN_SECONDS;
+      const rot = START_ROT + (((now - spinOrigin) / 1000) * Math.PI * 2) / SPIN_SECONDS;
       draw(rot, now);
       if (playing && !document.hidden) raf = requestAnimationFrame(tick);
     };
@@ -383,6 +388,18 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
       else raf = requestAnimationFrame(tick);
     };
 
+    // Chrome can stop compositing / clear a WebGL canvas while ancestors are
+    // visibility:hidden (GSAP autoAlpha). Kick a frame when we become visible again.
+    const onIo = (entries: IntersectionObserverEntry[]) => {
+      if (!playing || document.hidden) return;
+      if (entries.some((e) => e.isIntersecting)) {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(tick);
+      }
+    };
+    const io = typeof IntersectionObserver !== "undefined" ? new IntersectionObserver(onIo, { threshold: 0.01 }) : null;
+    io?.observe(canvas);
+
     void loadOutlineTexture(gl)
       .then((texture) => {
         if (!alive) {
@@ -391,6 +408,10 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
         }
         mapTex = texture;
         if (!playing) draw(START_ROT, 0);
+        else {
+          cancelAnimationFrame(raf);
+          raf = requestAnimationFrame(tick);
+        }
       })
       .catch(() => undefined);
 
@@ -407,6 +428,7 @@ export function HeroGlobe({ marksOn = false }: { marksOn?: boolean }) {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", fit);
       document.removeEventListener("visibilitychange", onVis);
+      io?.disconnect();
       ro.disconnect();
       gl.deleteProgram(program);
       gl.deleteShader(vs);

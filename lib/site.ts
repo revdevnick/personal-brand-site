@@ -20,7 +20,7 @@ export const site = {
   githubAlt: "https://github.com/nickprkins",
   twitter: "https://twitter.com/revdevnick",
   instagram: "https://instagram.com/revdevnick",
-  line: "I love solving problems. Some of them take code. The deepest ones take Jesus.",
+  line: "I love solving problems. Some of them take code. The rest take Jesus.",
 } as const;
 
 export const socials = [

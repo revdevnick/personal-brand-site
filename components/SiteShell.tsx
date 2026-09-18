@@ -37,6 +37,7 @@ export function SiteShell({ children }: { children: React.ReactNode }) {
 
   useLayoutEffect(() => {
     const root = document.documentElement;
+    root.classList.toggle("is-home", isHome);
     root.style.backgroundColor = chrome;
     root.style.colorScheme = scheme;
     document.body.style.backgroundColor = chrome;
