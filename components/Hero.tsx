@@ -478,10 +478,12 @@ export function Hero() {
     let markReveal: gsap.core.Timeline | null = null;
     let introDone = false;
     let idleOn = false;
+    let settleTimer = 0;
+    const NEAR_TOP = 8;
     const word = () => stage.querySelector<HTMLElement>("[data-emphasis]");
     const glow = () => stage.querySelector<HTMLElement>(".hero-glow-code");
     const world = () => stage.querySelector<HTMLElement>("[data-hero-world]");
-    const atTop = () => window.scrollY <= 4;
+    const atTop = () => window.scrollY <= NEAR_TOP;
 
     const stopBreath = () => {
       if (breath) {
@@ -494,11 +496,28 @@ export function Hero() {
       if (light) gsap.set(light, { scale: 1, opacity: 1 });
     };
 
-    const stopWorld = () => {
+    // Globe visibility must track scroll itself — idle start/stop races leave it
+    // stuck at autoAlpha 0 after a fast bottom→top jump even when idle restarts.
+    const syncWorldToScroll = () => {
       const layer = world();
-      if (!layer) return;
+      if (!layer || !introDone) return;
+      const show = atTop();
+      const current = Number(gsap.getProperty(layer, "opacity")) || 0;
+      if (!show) {
+        if (current > 0.001 || gsap.isTweening(layer)) {
+          gsap.killTweensOf(layer);
+          gsap.set(layer, { autoAlpha: 0 });
+        }
+        return;
+      }
+      const gap = 1 - current;
+      if (gap < 0.02) return;
       gsap.killTweensOf(layer);
-      gsap.to(layer, { autoAlpha: 0, duration: 0.4, overwrite: true });
+      if (gap > 0.35) {
+        gsap.set(layer, { autoAlpha: 1 });
+      } else {
+        gsap.to(layer, { autoAlpha: 1, duration: 0.45, ease: "power1.out", overwrite: true });
+      }
     };
 
     const measureInk = (el: HTMLElement, text: string) => {
@@ -679,21 +698,13 @@ export function Hero() {
       setMarksOn(false);
       stopBreath();
       stopLove();
-      stopWorld();
+      syncWorldToScroll();
     };
 
     const startIdle = () => {
       if (idleOn || !introDone || !atTop()) return;
       idleOn = true;
-
-      const layer = world();
-      if (layer) {
-        gsap.fromTo(
-          layer,
-          { autoAlpha: 0 },
-          { autoAlpha: 1, duration: 1.8, delay: 0.25, ease: "power1.out", overwrite: true },
-        );
-      }
+      syncWorldToScroll();
 
       const el = word();
       const light = glow();
@@ -821,7 +832,21 @@ export function Hero() {
     };
 
     const onScroll = () => {
-      if (window.scrollY > 8) stopIdle();
+      syncWorldToScroll();
+      if (window.scrollY > NEAR_TOP) stopIdle();
+      else if (introDone) startIdle();
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        syncWorldToScroll();
+        if (window.scrollY > NEAR_TOP) stopIdle();
+        else if (introDone) startIdle();
+      }, 120);
+    };
+
+    const onScrollEnd = () => {
+      window.clearTimeout(settleTimer);
+      syncWorldToScroll();
+      if (window.scrollY > NEAR_TOP) stopIdle();
       else if (introDone) startIdle();
     };
 
@@ -850,12 +875,14 @@ export function Hero() {
 
       intro.eventCallback("onComplete", () => {
         introDone = true;
+        syncWorldToScroll();
         if (atTop()) startIdle();
         else stopIdle();
       });
     }, root);
 
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("scrollend", onScrollEnd as EventListener);
 
     let resizeRaf = 0;
     let lastPhraseW = 0;
@@ -888,10 +915,12 @@ export function Hero() {
 
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scrollend", onScrollEnd as EventListener);
       window.removeEventListener("resize", onResize);
       window.removeEventListener("orientationchange", onResize);
       window.visualViewport?.removeEventListener("resize", onResize);
       phraseWatch.disconnect();
+      window.clearTimeout(settleTimer);
       if (resizeRaf) cancelAnimationFrame(resizeRaf);
       stopIdle();
       ctx.revert();
