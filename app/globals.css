@@ -255,12 +255,314 @@ body {
   opacity: 1;
 }
 
-footer .social-links {
-  font-size: 1.35rem;
+footer .social-links,
+.site-footer-socials {
+  font-size: 1.45rem;
 }
 
 #site-footer {
   scroll-margin-top: calc(var(--site-header) + 0.75rem);
+}
+
+.site-footer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: clamp(3.25rem, 6vw, 4.75rem) var(--page-gutter)
+    clamp(2.25rem, 4vw, 3rem);
+}
+
+.site-footer-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -35% -15% auto;
+  height: 95%;
+  z-index: 0;
+  background:
+    radial-gradient(
+      50% 70% at 12% 8%,
+      color-mix(in srgb, var(--color-accent) 38%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      42% 60% at 92% 0%,
+      color-mix(in srgb, var(--color-scripture) 28%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      70% 50% at 50% 100%,
+      color-mix(in srgb, var(--color-accent) 10%, transparent),
+      transparent 75%
+    );
+  opacity: 1;
+}
+
+html.is-home .site-footer-glow {
+  background:
+    radial-gradient(
+      52% 72% at 14% 0%,
+      color-mix(in srgb, var(--color-accent) 32%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      44% 62% at 90% 8%,
+      color-mix(in srgb, var(--color-scripture) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      80% 45% at 45% 110%,
+      color-mix(in srgb, var(--color-accent) 12%, transparent),
+      transparent 78%
+    );
+}
+
+.site-footer-grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.42;
+  background-image:
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in srgb, currentColor 4%, transparent) 100%
+    ),
+    repeating-linear-gradient(
+      -18deg,
+      transparent 0,
+      transparent 11px,
+      color-mix(in srgb, currentColor 5%, transparent) 11px,
+      color-mix(in srgb, currentColor 5%, transparent) 12px
+    );
+  mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 100%);
+}
+
+.site-footer-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  max-width: var(--page-max);
+  margin-inline: auto;
+}
+
+.site-footer-kicker,
+.site-footer-meta {
+  margin: 0;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, currentColor 48%, transparent);
+}
+
+.site-footer-kicker {
+  color: color-mix(in srgb, var(--color-accent) 72%, currentColor);
+}
+
+.site-footer-dot {
+  margin-inline: 0.55em;
+  letter-spacing: 0;
+}
+
+.site-footer-lead {
+  position: relative;
+  margin: 0;
+  max-width: 14em;
+  padding-bottom: 0.15em;
+  font-size: clamp(2.35rem, 5.2vw, 3.55rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+.site-footer-lead::after {
+  content: "";
+  display: block;
+  width: 3.25rem;
+  height: 2px;
+  margin-top: 0.85rem;
+  background: linear-gradient(
+    90deg,
+    var(--color-accent),
+    color-mix(in srgb, var(--color-scripture) 70%, transparent)
+  );
+  transform-origin: left center;
+}
+
+.site-footer-support {
+  margin: 0;
+  max-width: 44rem;
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+  line-height: 1.5;
+  color: color-mix(in srgb, currentColor 82%, transparent);
+  text-wrap: pretty;
+}
+
+.site-footer-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  margin-top: 0.85rem;
+  padding-top: 1.35rem;
+  border-top: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.site-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.92rem;
+}
+
+.site-footer-links > li:not(:last-child)::after {
+  content: "·";
+  margin-inline: 0.65rem;
+  color: color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.site-footer-link {
+  position: relative;
+  color: inherit;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.site-footer-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.18em;
+  height: 1px;
+  background: var(--color-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 220ms ease;
+}
+
+.site-footer-link:hover,
+.site-footer-link:focus-visible {
+  color: var(--color-accent);
+}
+
+.site-footer-link:hover::after,
+.site-footer-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.site-footer-meta {
+  margin-top: 0.35rem;
+}
+
+.site-footer-socials .social-link {
+  transition:
+    color 160ms ease,
+    opacity 160ms ease,
+    transform 220ms ease;
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .site-footer-socials .social-link:hover {
+    transform: translateY(-0.12em);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .site-footer-glow {
+    animation: footer-glow-breathe 9s ease-in-out infinite alternate;
+  }
+
+  .site-footer-lead {
+    animation: footer-lead-in 0.7s ease both;
+  }
+
+  .site-footer-lead::after {
+    animation: footer-rule-in 0.75s ease 0.18s both;
+  }
+
+  .site-footer-support,
+  .site-footer-bar,
+  .site-footer-meta {
+    animation: footer-rise-in 0.65s ease both;
+  }
+
+  .site-footer-support {
+    animation-delay: 0.08s;
+  }
+
+  .site-footer-bar {
+    animation-delay: 0.14s;
+  }
+
+  .site-footer-meta {
+    animation-delay: 0.2s;
+  }
+}
+
+@keyframes footer-glow-breathe {
+  from {
+    opacity: 0.72;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0.6rem) scale(1.03);
+  }
+}
+
+@keyframes footer-lead-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.55rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes footer-rule-in {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes footer-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.4rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 639px) {
+  .site-footer-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .site-footer-links {
+    gap: 0.55rem 0.1rem;
+  }
 }
 
 .site-header-spacer {
@@ -1184,6 +1486,14 @@ textarea:focus-visible {
   flex: 0 0 auto;
 }
 
+/* Finale: Listen/Read centered in the free space under Jesus. */
+.story-root.is-finale .story-doors,
+.story-stage.is-finale .story-doors {
+  top: 52%;
+  bottom: max(1.4rem, env(safe-area-inset-bottom, 0px));
+  justify-content: center;
+}
+
 .story-phrase-a,
 .story-phrase-b,
 .story-phrase-c {
@@ -1334,7 +1644,7 @@ textarea:focus-visible {
   font-family: var(--font-hi), "Noto Serif Devanagari", serif;
   font-size: 0.58em;
   white-space: nowrap;
-  translate: -50% calc(var(--love-script-shift, 0px) + 0.1em);
+  translate: -50% calc(var(--love-script-shift, 0px) + 0.1em + 5px);
 }
 
 .story-love-th .story-love-face {
@@ -1344,7 +1654,7 @@ textarea:focus-visible {
   font-family: var(--font-th), "Noto Serif Thai", serif;
   font-size: 0.82em;
   white-space: nowrap;
-  translate: -50% calc(var(--love-script-shift, 0px) + 0.1em);
+  translate: -50% calc(var(--love-script-shift, 0px) + 0.1em + 5px);
 }
 
 .story-love-sign {
@@ -1646,7 +1956,7 @@ textarea:focus-visible {
     width: max-content;
     top: 0;
     bottom: auto;
-    translate: -50% calc(var(--love-script-shift, 0px) + 0.1em);
+    translate: -50% calc(var(--love-script-shift, 0px) + 0.1em + 5px);
   }
 
   .story-phrase-c {

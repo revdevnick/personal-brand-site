@@ -163,6 +163,7 @@ export function Hero() {
     const stars = stage.querySelector<HTMLElement>(".hero-stars");
     const termSlot = stage.querySelector<HTMLElement>("[data-term-slot]");
     const typing = { gen: 0, raf: 0, timer: 0 };
+    let cueWait = 0;
 
     const ctx = gsap.context(() => {
       const captionType = () => {
@@ -202,8 +203,9 @@ export function Hero() {
         autoAlpha: 0,
       });
       gsap.set("[data-phrase-b]", { autoAlpha: 0, y: 18 });
-      gsap.set("[data-phrase-c]", { autoAlpha: 0, y: 8 });
-      gsap.set("[data-deep-word]", { autoAlpha: 0, y: 36, scale: 0.82 });
+      // Soft resting offsets — finale reads as a tagline handoff, not a pop-in.
+      gsap.set("[data-phrase-c]", { autoAlpha: 0, y: 12 });
+      gsap.set("[data-deep-word]", { autoAlpha: 0, y: 14, scale: 0.985 });
       gsap.set("[data-code-ok],[data-code-fail],[data-code-fix]", { textContent: "" });
       gsap.set("[data-doors]", { xPercent: -50, autoAlpha: 0, y: 16, pointerEvents: "none" });
       gsap.set("[data-terminal]", { y: 28 });
@@ -223,6 +225,49 @@ export function Hero() {
       let scene: Scene = "earth";
       let typeGen = 0;
       let typeRaf = 0;
+      const cue = stage.querySelector<HTMLElement>("[data-cue]");
+      cueWait = 0;
+      let cueHideArmed = false;
+
+      const hideCue = () => {
+        if (cueWait) {
+          window.clearTimeout(cueWait);
+          cueWait = 0;
+        }
+        if (!cue) return;
+        if (cueHideArmed || Number(gsap.getProperty(cue, "autoAlpha")) < 0.04) {
+          cueHideArmed = true;
+          return;
+        }
+        cueHideArmed = true;
+        gsap.to(cue, { autoAlpha: 0, y: 12, duration: 0.18, overwrite: true });
+      };
+
+      const showTopCue = () => {
+        if (cueWait) {
+          window.clearTimeout(cueWait);
+          cueWait = 0;
+        }
+        if (!cue) return;
+        cueHideArmed = false;
+        if (Number(gsap.getProperty(cue, "autoAlpha")) > 0.95) return;
+        gsap.to(cue, { autoAlpha: 1, y: 0, duration: 0.35, overwrite: true });
+      };
+
+      // Only call from animation onComplete / snapped end-states — never mid-typing
+      // or mid-tween, and never once Listen/Read own the bottom.
+      const revealCue = () => {
+        if (scene !== "craft" && scene !== "soul") return;
+        // Idempotent: completeCraft can run every scrub tick while the craft pane is forced back.
+        if (cue && Number(gsap.getProperty(cue, "autoAlpha")) > 0.9) return;
+        if (cueWait) return;
+        cueWait = window.setTimeout(() => {
+          cueWait = 0;
+          if (scene !== "craft" && scene !== "soul") return;
+          cueHideArmed = false;
+          gsap.to(cue, { autoAlpha: 1, y: 0, duration: 0.45, overwrite: true });
+        }, 120);
+      };
 
       const stopType = () => {
         typeGen += 1;
@@ -276,6 +321,8 @@ export function Hero() {
         showPane("craft");
         setTyped(codeOk, CODE_OK, 1);
         gsap.set("[data-compiled]", { autoAlpha: 1, x: 0 });
+        // Snapped end-state: COMPILED is already on screen.
+        revealCue();
       };
 
       const playCraft = () => {
@@ -283,9 +330,23 @@ export function Hero() {
         showPane("craft");
         resetSoul();
         resetCraft();
+        hideCue();
         runType(codeOk, CODE_OK, 1.35, token, () => {
           if (token !== typeGen) return;
-          gsap.fromTo("[data-compiled]", { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.18 });
+          // Cue only after COMPILED finishes appearing — not while craft is typing.
+          gsap.fromTo(
+            "[data-compiled]",
+            { autoAlpha: 0, x: -8 },
+            {
+              autoAlpha: 1,
+              x: 0,
+              duration: 0.18,
+              onComplete() {
+                if (token !== typeGen) return;
+                revealCue();
+              },
+            },
+          );
         });
       };
 
@@ -298,13 +359,17 @@ export function Hero() {
         gsap.set("[data-compiled-faith]", { autoAlpha: 1, x: 0 });
         if (window.innerHeight > 760) {
           gsap.set("[data-output]", { autoAlpha: 1, maxHeight: "22rem", paddingTop: "1.15em", paddingBottom: "1.25em" });
+          // Snapped end-state with Romans 5:1 visible.
+          revealCue();
         }
+        // Short viewports omit Romans — no soul cue (finale still invites scroll via CTAs).
       };
 
       const playSoul = () => {
         const token = ++typeGen;
         resetSoul();
         showPane("fail");
+        hideCue();
         const term = stage.querySelector("[data-terminal]");
         runType(codeFail, CODE_FAIL, 1.1, token, () => {
           if (token !== typeGen) return;
@@ -339,14 +404,36 @@ export function Hero() {
                 gsap.to(paneFix, { autoAlpha: 1, y: 0, duration: 0.4, ease: "power2.out" });
                 runType(codeFix, CODE_FIX, 1.45, token, () => {
                   if (token !== typeGen) return;
-                  gsap.fromTo("[data-compiled-faith]", { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.2 });
-                  if (window.innerHeight > 760) {
-                    gsap.fromTo(
-                      "[data-output]",
-                      { autoAlpha: 0, maxHeight: 0, paddingTop: 0, paddingBottom: 0 },
-                      { autoAlpha: 1, maxHeight: "22rem", paddingTop: "1.15em", paddingBottom: "1.25em", duration: 0.32 },
-                    );
-                  }
+                  gsap.fromTo(
+                    "[data-compiled-faith]",
+                    { autoAlpha: 0, x: -8 },
+                    {
+                      autoAlpha: 1,
+                      x: 0,
+                      duration: 0.2,
+                      onComplete() {
+                        if (token !== typeGen) return;
+                        // Soul cue only when Romans 5:1 has finished revealing — not when SOUL starts.
+                        if (window.innerHeight > 760) {
+                          gsap.fromTo(
+                            "[data-output]",
+                            { autoAlpha: 0, maxHeight: 0, paddingTop: 0, paddingBottom: 0 },
+                            {
+                              autoAlpha: 1,
+                              maxHeight: "22rem",
+                              paddingTop: "1.15em",
+                              paddingBottom: "1.25em",
+                              duration: 0.32,
+                              onComplete() {
+                                if (token !== typeGen) return;
+                                revealCue();
+                              },
+                            },
+                          );
+                        }
+                      },
+                    },
+                  );
                 });
               },
             });
@@ -415,6 +502,8 @@ export function Hero() {
           resetSoul();
           resetCraft();
           showPane("craft");
+          // Returning to the pin top — restore the intro scroll invite.
+          showTopCue();
           return;
         }
         if (next === "craft") {
@@ -433,53 +522,22 @@ export function Hero() {
           gsap.set("[data-compiled]", { autoAlpha: 1, x: 0 });
           if (forward) playSoul();
           else completeSoul();
+          return;
         }
+        // finale — CTAs own the bottom; never compete with Listen/Read
+        hideCue();
       };
       const holdCraft = { t: 0 };
       const holdSoul = { t: 0 };
       const holdFinale = { t: 0 };
-      const cue = stage.querySelector<HTMLElement>("[data-cue]");
-      const compiledOk = stage.querySelector<HTMLElement>("[data-compiled]");
-      const compiledFaith = stage.querySelector<HTMLElement>("[data-compiled-faith]");
-      let cueWait = 0;
-
-      const hideCue = () => {
-        if (cueWait) {
-          window.clearTimeout(cueWait);
-          cueWait = 0;
-        }
-        if (!cue) return;
-        if (Number(gsap.getProperty(cue, "autoAlpha")) < 0.04) return;
-        gsap.to(cue, { autoAlpha: 0, y: 12, duration: 0.18, overwrite: true });
-      };
-
-      const beatAllowsCue = () => {
-        if (scene === "craft") return !!compiledOk && Number(getComputedStyle(compiledOk).opacity) > 0.55;
-        if (scene === "soul") return !!compiledFaith && Number(getComputedStyle(compiledFaith).opacity) > 0.55;
-        return false;
-      };
-
-      const armCue = () => {
-        if (cueWait) window.clearTimeout(cueWait);
-        if (scene !== "craft" && scene !== "soul") return;
-        const ready = beatAllowsCue();
-        cueWait = window.setTimeout(() => {
-          cueWait = 0;
-          if (scene !== "craft" && scene !== "soul") return;
-          if (!beatAllowsCue()) {
-            armCue();
-            return;
-          }
-          gsap.to(cue, { autoAlpha: 1, y: 0, duration: 0.45, overwrite: true });
-        }, ready ? 2000 : 450);
-      };
 
       const scrub = gsap.timeline({
         defaults: { ease: "none" },
         scrollTrigger: {
           trigger: stage,
           start: "top top",
-          end: () => `+=${Math.round(window.innerHeight * 2.15)}`,
+          // Extra pin distance so Romans → Jesus can crossfade without a compressed scrub dump.
+          end: () => `+=${Math.round(window.innerHeight * 2.45)}`,
           pin: true,
           pinSpacing: true,
           anticipatePin: 1,
@@ -497,17 +555,23 @@ export function Hero() {
             if (real >= 0.05) playEarthExit();
             const craftAt = anim.labels.craft ?? 0.72;
             const soulAt = anim.labels.soul ?? 1.43;
-            const finaleAt = anim.labels.finale ?? 2.15;
+            const finaleAt = anim.labels.finale ?? 2.28;
+            // Layout class lands with the Jesus line (not at Romans exit) to avoid an empty gap pop.
+            const finaleLayoutAt = anim.labels["finale-line"] ?? finaleAt + 0.42;
             const next: Scene = t < craftAt ? "earth" : t < soulAt ? "craft" : t < finaleAt ? "soul" : "finale";
             if (next !== scene) {
               const order = { earth: 0, craft: 1, soul: 2, finale: 3 };
               const forward = order[next] > order[scene];
               scene = next;
-              stage.classList.toggle("is-finale", next === "finale");
               enterScene(next, forward);
             } else if (next === "craft" && paneFix && Number(getComputedStyle(paneFix).opacity) > 0.5) {
               completeCraft();
             }
+            stage.classList.toggle("is-finale", t >= finaleLayoutAt);
+            // Cue is owned by scene beats (not the scrub timeline). Hide as soon as the
+            // wheel leaves the pin top, and keep finale clear of the mouse icon so it
+            // never sits between Listen/Read.
+            if (scene === "finale" || (scene === "earth" && real >= 0.05)) hideCue();
             // Real scroll wins last: reverse scene snaps (completeEarthExit) must not
             // leave the globe hidden when the pin is actually back at the start.
             if (real < 0.05) restoreEarth();
@@ -517,7 +581,6 @@ export function Hero() {
 
       scrub
         .addLabel("earth")
-        .fromTo("[data-cue]", { autoAlpha: 1, y: 0 }, { autoAlpha: 0, y: 12, duration: 0.3 }, 0)
         .to(".hero-motes", { autoAlpha: 0, duration: 0.4 }, 0)
         .to(copy, { y: copyLift, duration: 1.05 }, 0.08)
         .to(termSlot, { y: termLift, duration: 1.05 }, 0.08)
@@ -536,26 +599,36 @@ export function Hero() {
         .addLabel("departed", 1.05)
         .to(holdCraft, { t: 1, duration: 0.38 }, 1.05)
         .addLabel("soul", 1.43)
-        .to(holdSoul, { t: 1, duration: 0.72 }, 1.43)
-        .addLabel("finale", 2.15)
-        .to("[data-terminal]", { autoAlpha: 0, y: 16, duration: 0.38 }, "finale")
-        .to("[data-cluster]", { autoAlpha: 0, y: -8, duration: 0.3 }, "finale")
-        .to(".hero-grid", { autoAlpha: 0.28, duration: 0.38 }, "finale")
-        .to(copy, { y: copyFinale, duration: 0.42 }, "finale")
-        .to("[data-phrase-c]", { autoAlpha: 1, y: 0, duration: 0.38 }, "finale+=0.08")
-        .to("[data-deep-word]", { autoAlpha: 1, y: 0, scale: 1, duration: 0.32, stagger: 0.05 }, "finale+=0.08")
+        // Longer Romans dwell so the scripture beat can settle before the tagline close.
+        .to(holdSoul, { t: 1, duration: 0.85 }, 1.43)
+        .addLabel("finale", 2.28)
+        // Phase 1 — Romans / terminal soft exit first (clear the plane before the close).
+        .to("[data-terminal]", { autoAlpha: 0, y: 4, duration: 0.55 }, "finale")
+        .to("[data-cluster]", { autoAlpha: 0, y: -4, duration: 0.4 }, "finale+=0.05")
+        .to(".hero-grid", { autoAlpha: 0.28, duration: 0.55 }, "finale")
+        .to(copy, { y: copyFinale, duration: 0.7 }, "finale+=0.12")
+        // Phase 2 — “The rest take Jesus” after terminal is mostly gone (no underlap).
+        .addLabel("finale-line", 2.7)
+        .to("[data-phrase-c]", { autoAlpha: 1, y: 0, duration: 0.65 }, "finale-line")
+        .to(
+          "[data-deep-word]",
+          { autoAlpha: 1, y: 0, scale: 1, duration: 0.6, stagger: 0.03 },
+          "finale-line",
+        )
         .to(
           "[data-doors]",
-          { autoAlpha: 1, y: 0, pointerEvents: "auto", duration: 0.38 },
-          "finale+=0.12",
+          { autoAlpha: 1, y: 0, pointerEvents: "auto", duration: 0.48 },
+          "finale-line+=0.32",
         )
-        .to(holdFinale, { t: 1, duration: 0.5 }, "finale+=0.4");
+        .to(holdFinale, { t: 1, duration: 0.55 }, "finale-line+=0.55");
     }, root);
 
     const refresh = window.setTimeout(() => ScrollTrigger.refresh(), 280);
     return () => {
       stage.classList.remove("is-finale");
       window.clearTimeout(refresh);
+      if (cueWait) window.clearTimeout(cueWait);
+      cueWait = 0;
       typing.gen += 1;
       if (typing.raf) cancelAnimationFrame(typing.raf);
       if (typing.timer) window.clearTimeout(typing.timer);
@@ -1078,9 +1151,6 @@ export function Hero() {
           <Link href="/sermons/" className="magnetic door door-loud">Listen</Link>
           <Link href="/writing/" className="magnetic door door-loud">Read</Link>
         </div>
-        <Link href="/work/" className="font-ui text-sm tracking-wide text-study/55 hover:text-accent">
-          or see the work
-        </Link>
       </section>
     );
   }
@@ -1240,9 +1310,6 @@ error TS2304: Cannot find name 'Peace'.`}
               <Link href="/sermons/" className="magnetic door door-loud w-full sm:w-auto">Listen</Link>
               <Link href="/writing/" className="magnetic door door-loud w-full sm:w-auto">Read</Link>
             </div>
-            <Link href="/work/" className="mt-5 font-ui text-sm tracking-wide text-study/55 hover:text-accent">
-              or see the work
-            </Link>
           </div>
         </div>
 
