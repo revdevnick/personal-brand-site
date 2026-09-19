@@ -5,7 +5,7 @@ import { getSolveEntries } from "@/lib/content";
 export const metadata: Metadata = {
   title: "Solve",
   description:
-    "Problems presented to Nick — and the apps and websites he built in response.",
+    "Mostly apps and websites. Someone brings an idea or a problem — Nick tries to solve it in code.",
 };
 
 export default function SolvePage() {
@@ -20,8 +20,8 @@ export default function SolvePage() {
           <span className="solve-hero-line solve-hero-line--accent">Solution.</span>
         </h1>
         <p className="solve-hero-lede">
-          Mostly apps and websites. Someone brings a mess. I build the thing that
-          answers it.
+          Mostly apps and websites. Someone brings an idea or a problem. I try to
+          solve it in code.
         </p>
       </header>
 

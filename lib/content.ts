@@ -176,6 +176,8 @@ export function getSolveEntries(): SolveEntry[] {
   const parsed = loadYaml(raw) as { entries?: Record<string, unknown>[] };
   const items = (parsed.entries ?? []).map((entry) => {
     const stackRaw = entry.stack ?? entry.topics;
+    const imagesRaw = entry.images;
+    const linksRaw = entry.links;
     return {
       slug: String(entry.slug),
       title: String(entry.title),
@@ -184,6 +186,19 @@ export function getSolveEntries(): SolveEntry[] {
       type: String(entry.type ?? "app"),
       url: entry.url ? String(entry.url) : undefined,
       image: entry.image ? String(entry.image) : undefined,
+      images: Array.isArray(imagesRaw) ? imagesRaw.map(String) : undefined,
+      video: entry.video ? String(entry.video) : undefined,
+      body: entry.body ? String(entry.body).trim() : undefined,
+      links: Array.isArray(linksRaw)
+        ? linksRaw
+            .map((link) => {
+              if (!link || typeof link !== "object") return null;
+              const row = link as Record<string, unknown>;
+              if (!row.label || !row.url) return null;
+              return { label: String(row.label), url: String(row.url) };
+            })
+            .filter((link): link is { label: string; url: string } => Boolean(link))
+        : undefined,
       date: asDateString(entry.date ?? "1970"),
       stack: Array.isArray(stackRaw) ? stackRaw.map(String) : undefined,
       order: entry.order !== undefined ? Number(entry.order) : undefined,
@@ -195,6 +210,10 @@ export function getSolveEntries(): SolveEntry[] {
     if (byDate !== 0) return byDate;
     return (a.order ?? 99) - (b.order ?? 99);
   });
+}
+
+export function getSolveEntry(slug: string): SolveEntry | undefined {
+  return getSolveEntries().find((entry) => entry.slug === slug);
 }
 
 /** @deprecated Prefer getSolveEntries(). */

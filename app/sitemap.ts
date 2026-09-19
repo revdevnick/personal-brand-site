@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getSermons, getWritings } from "@/lib/content";
+import { getSermons, getSolveEntries, getWritings } from "@/lib/content";
 import { LISTEN_FORMAT_FLAGS } from "@/lib/listen-formats";
 import { READ_FORMAT_FLAGS } from "@/lib/read-formats";
 import { site } from "@/lib/site";
@@ -41,10 +41,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: new Date(post.date),
   }));
 
+  const solve = getSolveEntries().map((entry) => ({
+    url: `${site.url}/solve/${entry.slug}/`,
+    lastModified: new Date(entry.date.length === 4 ? `${entry.date}-01-01` : entry.date),
+  }));
+
   const tags = ["faith", "tech", "ai", "engineering", "life"].map((tag) => ({
     url: `${site.url}/read/tags/${tag}/`,
     lastModified: new Date(),
   }));
 
-  return [...staticRoutes, ...sermons, ...writings, ...tags];
+  return [...staticRoutes, ...sermons, ...writings, ...solve, ...tags];
 }

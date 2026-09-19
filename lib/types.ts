@@ -85,6 +85,12 @@ export type Appearance = {
   image?: string;
 };
 
+/** Extra outbound link on a Solve detail page (App Store, GitHub, press, etc.). */
+export type SolveLink = {
+  label: string;
+  url: string;
+};
+
 /**
  * A Solve problem→solution entry (apps, websites, and similar builds).
  * Prefer YAML in `content/solving/entries.yml` — not agency case studies.
@@ -102,6 +108,17 @@ export type SolveEntry = {
   url?: string;
   /** Optional still — public path (e.g. `/solve/scoreboardtv.jpg`). */
   image?: string;
+  /**
+   * Extra archival stills / screenshots for the detail page.
+   * Public paths under `/solve/<slug>/…`.
+   */
+  images?: string[];
+  /** Optional demo video (public path). */
+  video?: string;
+  /** Longer archive copy for `/solve/[slug]/` — plain paragraphs. */
+  body?: string;
+  /** Secondary links shown on the detail page. */
+  links?: SolveLink[];
   /**
    * Year (`2024`) or ISO date. Year-only is preferred.
    * Sorts newest-first; `formatDate` handles display.

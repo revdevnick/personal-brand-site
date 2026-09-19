@@ -1,8 +1,8 @@
 # Problem → solution entries for /solve/.
 # Add a new entry under `entries:` — no code changes required.
 # Required: slug, title, problem, solution, type, date.
-# Optional: url, image (public path), stack, order, note.
-# Story Rocket does not belong here.
+# Optional: url, image, images, video, body, links, stack, order, note.
+# Story Rocket (the company) does not belong here as a case study — products do.
 entries:
   - slug: scoreboardtv
     title: ScoreboardTV
@@ -15,26 +15,226 @@ entries:
       - tvOS
       - iOS
     order: 1
+    note: Built under Story Rocket. Archival screenshots not yet in this repo.
 
-  - slug: b4ufly-kittyhawk
-    title: B4UFLY and Kittyhawk
-    problem: Drone pilots needed to understand airspace and fly compliantly, including the app named in FAA materials.
-    solution: Maps, regulations, and mobile tooling for drone operations — Air Control early on, then B4UFLY for the public.
+  - slug: b4ufly
+    title: B4UFLY
+    problem: Drone pilots in the US needed a clear answer about airspace before they flew — and the FAA needed an app named in every new drone's manual.
+    solution: Kittyhawk partnered with the FAA on B4UFLY — maps and rules on a phone so recreational flyers can check where they can fly.
     type: app
-    date: 2016
+    date: 2021
+    url: https://apps.apple.com/us/app/b4ufly-drone-airspace/id992427109
+    image: /solve/b4ufly/feature.jpg
+    images:
+      - /solve/b4ufly/screenshot.png
     stack:
       - Swift
       - Maps
       - Aviation
+    order: 1
+    links:
+      - label: App Store
+        url: https://apps.apple.com/us/app/b4ufly-drone-airspace/id992427109
+      - label: FAA B4UFLY
+        url: https://www.faa.gov/uas/recreational_fliers/where_can_i_fly/b4ufly/
+    body: |
+      Kittyhawk partnered with the FAA to help develop B4UFLY. If you buy a drone in the United States, this app is listed in the manual so pilots can understand the airspace they are about to fly in.
+
+  - slug: kittyhawk-air-control
+    title: Kittyhawk Air Control
+    problem: Enterprise drone operators needed LAANC authorizations, admin workflows, and a calm in-flight experience — not a pile of separate tools.
+    solution: An iOS app for compliant ops — admin-built workflows, airspace awareness, and a simple board for the person flying.
+    type: app
+    date: 2019
+    url: https://apps.apple.com/us/app/kittyhawk-air-control/id1472965046
+    image: /solve/kittyhawk-air-control/feature.png
+    video: /solve/kittyhawk-air-control/demo.mp4
+    stack:
+      - Swift
+      - LAANC
+      - Maps
+    order: 1
+    links:
+      - label: App Store
+        url: https://apps.apple.com/us/app/kittyhawk-air-control/id1472965046
+    body: |
+      Enterprise iOS app to help drone pilots fly compliantly utilizing LAANC, admin-created workflows, and a simple, informative in-flight experience.
+
+  - slug: kittyhawk-drone-ops
+    title: Kittyhawk Drone Ops & Airspace
+    problem: Kittyhawk needed a first native iOS product for drone operations and airspace before the later Air Control generation.
+    solution: The first Kittyhawk iOS app, written in Swift — ops and airspace on the phone.
+    type: app
+    date: 2017
+    url: https://apps.apple.com/us/app/kittyhawk-drone-ops-airspace/id969578120
+    image: /solve/kittyhawk-drone-ops/feature.png
+    images:
+      - /solve/kittyhawk-drone-ops/screenshot.png
+    stack:
+      - Swift
+      - Maps
+      - Aviation
+    order: 1
+    links:
+      - label: App Store
+        url: https://apps.apple.com/us/app/kittyhawk-drone-ops-airspace/id969578120
+    body: |
+      First Kittyhawk iOS app written in Swift — drone ops and airspace for pilots on a phone.
+
+  - slug: precisionflight
+    title: PrecisionFlight for DJI Drones
+    problem: Commercial and enterprise drone teams needed reliable flight software for DJI airframes and sensors — visual, thermal, and multispectral — without a fragile legacy codebase.
+    solution: Key iOS work on PrecisionFlight — Swift modernization, new features, CI to the App Store and HockeyApp, security hardening, and field QA.
+    type: app
+    date: 2018
+    url: https://itunes.apple.com/us/app/precisionflight-for-dji-drones/id1112592228?mt=8
+    image: /solve/precisionflight/feature.png
+    images:
+      - /solve/precisionflight/ipad.jpg
+    stack:
+      - Swift
+      - DJI SDK
+      - MapKit
+      - Core Data
+    order: 1
+    links:
+      - label: App Store
+        url: https://itunes.apple.com/us/app/precisionflight-for-dji-drones/id1112592228?mt=8
+    body: |
+      Key developer for the PrecisionFlight iOS app that utilized DJI commercial and enterprise drones (Matrice 100/200/600, Mavic Pro and Phantoms) to capture aerial imagery with built-in and interchangeable sensors (visual, thermal, multispectral).
+
+      Work included pivotal legacy moves to Swift 4.1, new features, performance improvements, automated release and testing to the App Store and HockeyApp with Jenkins, and security changes to protect and obfuscate data. Field and office QA, App Store marketing presence, and UI/UX ideas for a better customer experience. Agile/Scrum with Jira and Git. DJI SDK, Core Data, MapKit, iCloud, GCD, MVC, MVVM, plus Alamofire, Mapbox, AWS, Fabric, and Mixpanel.
+
+  - slug: persistchat
+    title: PersistChat
+    problem: Learning Core Data for real meant shipping something that looked like a messenger — friends, threads, and messages that survive relaunch — not another toy tutorial.
+    solution: A fictitious chat app with a custom tab bar, seeded friends and messages, send/receive simulation, and a Core Data stack meant to be reused later.
+    type: app
+    date: 2017
+    url: https://github.com/nickprkins/PersistChat
+    image: /solve/persistchat/feature.png
+    images:
+      - /solve/persistchat/screen-1.png
+      - /solve/persistchat/screen-2.png
+      - /solve/persistchat/screen-3.png
+      - /solve/persistchat/screen-4.png
+    stack:
+      - Swift
+      - Core Data
     order: 2
+    links:
+      - label: GitHub
+        url: https://github.com/nickprkins/PersistChat
+    body: |
+      A fictitious chat app that persists in Core Data. It uses a custom UITabBarController and loads recent messages when the app launches. You can send messages to friends in the recent list and simulate incoming messages. Built to learn a Core Data stack for future projects.
 
   - slug: food-genie
     title: Food Genie
     problem: People who could not decide where to eat needed an unbiased third party, not another list.
-    solution: A small wheel of nearby places — first a web tool for coworkers, then an iOS app that shipped.
+    solution: A small wheel of nearby places — first a web tool for coworkers, then an iOS app that shipped to the App Store.
     type: app
-    date: 2013
+    date: 2017
+    url: https://appsto.re/us/jQF0db.i
+    image: /solve/food-genie/feature.png
+    images:
+      - /solve/food-genie/phone.jpg
+      - /solve/food-genie/wheel.jpg
+      - /solve/food-genie/result.jpg
     stack:
       - Swift
       - Location
+      - Yelp API
     order: 3
+    links:
+      - label: App Store
+        url: https://appsto.re/us/jQF0db.i
+      - label: Product Hunt
+        url: https://www.producthunt.com/posts/food-genie-decide-where-to-eat-find-restaurants
+      - label: PhoneDog Top 10 (Feb 2017)
+        url: http://www.phonedog.com/videos/top-10-ios-apps-february-2017
+      - label: TWIT iOS Today
+        url: https://youtu.be/xvhJ1KnNOGw
+    body: |
+      Food Genie started as a web tool at Electronic Solutions when coworkers could not decide where to eat. That idea became the Iron Yard final project — Yelp’s API, six nearby places on a wheel, a pan gesture to spin, then an overlay with restaurant details and a jump into Yelp for directions.
+
+      The iOS app shipped with Swift 2.3 and CocoaPods. PhoneDog named it a Top 10 iOS app for February 2017; Megan Morrone and Leo Laporte covered it on TWIT’s iOS Today. Also listed on Product Hunt.
+
+  - slug: forecaster
+    title: Forecaster
+    problem: A weather forecast needed to be readable on a phone without burying the next few hours under chrome.
+    solution: A native iOS weather app with a clear forecast surface (archived feature art from the old portfolio).
+    type: app
+    date: 2016
+    image: /solve/forecaster/feature.png
+    stack:
+      - Swift
+      - iOS
+    order: 1
+    note: Detail page on nickperkins.dev was a stub; framing reconstructed from archive metadata.
+    body: |
+      Forecaster was listed in the archived portfolio as an iOS phone app (mobile + UI/UX). The live detail page only kept the title and category — this entry preserves the feature art and listing so the work is not lost.
+
+  - slug: scc2
+    title: SCC2
+    problem: DTS Software needed an iOS client their customers could actually use — especially around UI polish — not just a thin wrapper.
+    solution: Contract iOS work on SCC2 with a strong focus on interface and going past the minimum ask.
+    type: app
+    date: 2016
+    image: /solve/scc2/feature.png
+    stack:
+      - Swift
+      - iOS
+    order: 2
+    note: Client testimonial on the old site praised the SCC2 UI work. Detail page was thin.
+    body: |
+      SCC2 was an iOS app for DTS Software. The archived portfolio kept feature art and category tags; a client note on nickperkins.dev called out UI work that went beyond the brief.
+
+  - slug: quickset
+    title: QuickSet
+    problem: A full-stack iOS product needed a clear launch, login, and home flow — something you could demo without a long explanation.
+    solution: QuickSet — iOS app with archived launch/home GIFs and login screens from early mobile work.
+    type: app
+    date: 2016
+    image: /solve/quickset/feature.png
+    images:
+      - /solve/quickset/icon.png
+      - /solve/quickset/launch.gif
+      - /solve/quickset/home.gif
+      - /solve/quickset/login.jpg
+    stack:
+      - Swift
+      - Full stack
+    order: 3
+    note: Old detail page said “Information goes here also.” Screenshots and GIFs were preserved from media.
+    body: |
+      QuickSet appeared in the archived portfolio as full-stack / iOS. Written detail was never filled in on the WordPress page; the icon, launch and home GIFs, and login stills from the media library are kept here so the product history survives.
+
+  - slug: iplocate
+    title: IPLocate
+    problem: Looking up where an IP sits should not require a desktop browser or a wall of raw fields.
+    solution: A small iOS utility for IP location, preserved from the archived portfolio feature art.
+    type: app
+    date: 2016
+    image: /solve/iplocate/feature.png
+    stack:
+      - Swift
+      - Networking
+    order: 4
+    note: Detail page on nickperkins.dev was a stub.
+    body: |
+      IPLocate was listed as an iOS phone app (mobile + UI/UX) on the archived site. The detail route never received a write-up; this entry keeps the feature image and listing.
+
+  - slug: wordjive
+    title: WordJive
+    problem: A word-puzzle idea needed a shippable iOS game, built with a team rather than alone.
+    solution: WordJive — a word puzzle app from early iOS work, archived with its feature art.
+    type: app
+    date: 2016
+    image: /solve/wordjive/feature.png
+    stack:
+      - Swift
+      - iOS
+    order: 5
+    note: Archive body was only “Word puzzle app. Team.”
+    body: |
+      WordJive was a team-built word puzzle app in the archived portfolio. The old detail page only retained that short line; the feature art is preserved here.

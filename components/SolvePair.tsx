@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { formatDate } from "@/lib/format";
 import type { SolveEntry } from "@/lib/types";
@@ -15,6 +16,7 @@ export function SolvePair({ item, index }: Props) {
   const flip = index % 2 === 1;
   const typeLabel = item.type.replace(/^\w/, (c) => c.toUpperCase());
   const n = String(index + 1).padStart(2, "0");
+  const href = `/solve/${item.slug}/`;
 
   useEffect(() => {
     const el = ref.current;
@@ -57,11 +59,15 @@ export function SolvePair({ item, index }: Props) {
           </span>
           <span>{typeLabel}</span>
         </p>
-        <h2 className="solve-pair-title">{item.title}</h2>
+        <h2 className="solve-pair-title">
+          <Link href={href} className="solve-pair-title-link">
+            {item.title}
+          </Link>
+        </h2>
         <p className="solve-pair-solution">{item.solution}</p>
 
         {item.image ? (
-          <div className="solve-pair-frame">
+          <Link href={href} className="solve-pair-frame" tabIndex={-1}>
             <div className="solve-pair-frame-chrome" aria-hidden>
               <span />
               <span />
@@ -75,7 +81,7 @@ export function SolvePair({ item, index }: Props) {
               className="solve-pair-frame-img"
               sizes="(max-width: 900px) 100vw, 28rem"
             />
-          </div>
+          </Link>
         ) : null}
 
         {item.stack?.length ? (
@@ -88,16 +94,9 @@ export function SolvePair({ item, index }: Props) {
 
         {item.note ? <p className="solve-pair-note">{item.note}</p> : null}
 
-        {item.url ? (
-          <a
-            href={item.url}
-            target={item.url.startsWith("http") ? "_blank" : undefined}
-            rel={item.url.startsWith("http") ? "noopener noreferrer" : undefined}
-            className="solve-pair-link"
-          >
-            Open <span aria-hidden>→</span>
-          </a>
-        ) : null}
+        <Link href={href} className="solve-pair-link">
+          Read more <span aria-hidden>→</span>
+        </Link>
       </div>
     </article>
   );
