@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { formatDate } from "@/lib/format";
+import { getSolvePrimaryVisual } from "@/lib/solve";
 import type { SolveEntry } from "@/lib/types";
 
 type Props = {
@@ -17,6 +18,7 @@ export function SolvePair({ item, index }: Props) {
   const typeLabel = item.type.replace(/^\w/, (c) => c.toUpperCase());
   const n = String(index + 1).padStart(2, "0");
   const href = `/solve/${item.slug}/`;
+  const visual = getSolvePrimaryVisual(item);
 
   useEffect(() => {
     const el = ref.current;
@@ -66,22 +68,35 @@ export function SolvePair({ item, index }: Props) {
         </h2>
         <p className="solve-pair-solution">{item.solution}</p>
 
-        {item.image ? (
-          <Link href={href} className="solve-pair-frame" tabIndex={-1}>
-            <div className="solve-pair-frame-chrome" aria-hidden>
-              <span />
-              <span />
-              <span />
-            </div>
-            <Image
-              src={item.image}
-              alt=""
-              width={960}
-              height={640}
-              className="solve-pair-frame-img"
-              sizes="(max-width: 900px) 100vw, 28rem"
-            />
-          </Link>
+        {visual ? (
+          visual.mode === "icon" ? (
+            <Link href={href} className="solve-pair-icon" tabIndex={-1}>
+              <Image
+                src={visual.src}
+                alt=""
+                width={512}
+                height={512}
+                className="solve-pair-icon-img"
+                sizes="(max-width: 900px) 7rem, 7.25rem"
+              />
+            </Link>
+          ) : (
+            <Link href={href} className="solve-pair-frame" tabIndex={-1}>
+              <div className="solve-pair-frame-chrome" aria-hidden>
+                <span />
+                <span />
+                <span />
+              </div>
+              <Image
+                src={visual.src}
+                alt=""
+                width={960}
+                height={640}
+                className="solve-pair-frame-img"
+                sizes="(max-width: 900px) 100vw, 28rem"
+              />
+            </Link>
+          )
         ) : null}
 
         {item.stack?.length ? (

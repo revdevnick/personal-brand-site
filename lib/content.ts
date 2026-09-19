@@ -186,6 +186,11 @@ export function getSolveEntries(): SolveEntry[] {
       type: String(entry.type ?? "app"),
       url: entry.url ? String(entry.url) : undefined,
       image: entry.image ? String(entry.image) : undefined,
+      icon: entry.icon ? String(entry.icon) : undefined,
+      display:
+        entry.display === "icon" || entry.display === "screenshot"
+          ? entry.display
+          : undefined,
       images: Array.isArray(imagesRaw) ? imagesRaw.map(String) : undefined,
       video: entry.video ? String(entry.video) : undefined,
       body: entry.body ? String(entry.body).trim() : undefined,

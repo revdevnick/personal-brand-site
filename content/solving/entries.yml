@@ -1,7 +1,9 @@
 # Problem → solution entries for /solve/.
 # Add a new entry under `entries:` — no code changes required.
 # Required: slug, title, problem, solution, type, date.
-# Optional: url, image, images, video, body, links, stack, order, note.
+# Optional: url, image, icon, display, images, video, body, links, stack, order, note.
+# display: icon | screenshot — force squircle vs browser-frame treatment.
+# icon: dedicated app-icon asset (preferred for apps when present).
 # Story Rocket (the company) does not belong here as a case study — products do.
 entries:
   - slug: scoreboardtv
@@ -196,8 +198,9 @@ entries:
     type: app
     date: 2016
     image: /solve/quickset/feature.png
+    icon: /solve/quickset/icon.png
+    display: icon
     images:
-      - /solve/quickset/icon.png
       - /solve/quickset/launch.gif
       - /solve/quickset/home.gif
       - /solve/quickset/login.jpg

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { getSolveEntries, getSolveEntry } from "@/lib/content";
 import { formatDate } from "@/lib/format";
+import { getSolveGalleryItems } from "@/lib/solve";
 
 export function generateStaticParams() {
   return getSolveEntries().map((entry) => ({ slug: entry.slug }));
@@ -36,13 +37,7 @@ export default async function SolveDetailPage({
   if (!entry) notFound();
 
   const typeLabel = entry.type.replace(/^\w/, (c) => c.toUpperCase());
-  const gallery = (() => {
-    const shots = [...(entry.images ?? [])];
-    if (entry.image && !shots.includes(entry.image)) {
-      shots.unshift(entry.image);
-    }
-    return shots;
-  })();
+  const gallery = getSolveGalleryItems(entry);
 
   const paragraphs = entry.body
     ? entry.body
@@ -83,7 +78,7 @@ export default async function SolveDetailPage({
       </section>
 
       {gallery.length > 0 || entry.video ? (
-        <section className="solve-detail-media" aria-label="Screenshots">
+        <section className="solve-detail-media" aria-label="Media">
           {entry.video ? (
             <div className="solve-detail-video-wrap">
               <video
@@ -97,20 +92,33 @@ export default async function SolveDetailPage({
               </video>
             </div>
           ) : null}
-          {gallery.map((src) => (
-            <figure key={src} className="solve-detail-shot">
-              {/* GIFs and archival stills — unoptimized export already */}
-              <Image
-                src={src}
-                alt=""
-                width={1200}
-                height={800}
-                className="solve-detail-shot-img"
-                sizes="(max-width: 900px) 100vw, 48rem"
-                unoptimized={src.endsWith(".gif")}
-              />
-            </figure>
-          ))}
+          {gallery.map((item) =>
+            item.mode === "icon" ? (
+              <figure key={item.src} className="solve-detail-icon">
+                <Image
+                  src={item.src}
+                  alt=""
+                  width={512}
+                  height={512}
+                  className="solve-detail-icon-img"
+                  sizes="(max-width: 900px) 8rem, 8.5rem"
+                />
+              </figure>
+            ) : (
+              <figure key={item.src} className="solve-detail-shot">
+                {/* GIFs and archival stills — unoptimized export already */}
+                <Image
+                  src={item.src}
+                  alt=""
+                  width={1200}
+                  height={800}
+                  className="solve-detail-shot-img"
+                  sizes="(max-width: 900px) 100vw, 48rem"
+                  unoptimized={item.src.endsWith(".gif")}
+                />
+              </figure>
+            ),
+          )}
         </section>
       ) : null}
 

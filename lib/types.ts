@@ -91,6 +91,9 @@ export type SolveLink = {
   url: string;
 };
 
+/** How the primary Solve still should render in the UI. */
+export type SolveImageDisplay = "icon" | "screenshot";
+
 /**
  * A Solve problem→solution entry (apps, websites, and similar builds).
  * Prefer YAML in `content/solving/entries.yml` — not agency case studies.
@@ -108,6 +111,16 @@ export type SolveEntry = {
   url?: string;
   /** Optional still — public path (e.g. `/solve/scoreboardtv.jpg`). */
   image?: string;
+  /**
+   * Optional dedicated app icon (preferred over `image` for icon treatment).
+   * Public path under `/solve/<slug>/…` (e.g. `/solve/quickset/icon.png`).
+   */
+  icon?: string;
+  /**
+   * Force primary still presentation: `icon` (squircle) or `screenshot` (frame).
+   * Defaults: apps → icon when an icon/logo mark exists; websites → screenshot.
+   */
+  display?: SolveImageDisplay;
   /**
    * Extra archival stills / screenshots for the detail page.
    * Public paths under `/solve/<slug>/…`.

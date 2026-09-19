@@ -2286,6 +2286,44 @@ textarea:focus-visible {
   object-fit: cover;
 }
 
+/* App icon — iOS/Android-style squircle (not browser chrome) */
+.solve-pair-icon {
+  display: block;
+  margin-top: 1.5rem;
+  width: clamp(5.75rem, 28vw, 7.25rem);
+  aspect-ratio: 1;
+  border-radius: 22.5%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-field) 90%, white);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 70%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, var(--color-ink) 10%, transparent),
+    0 14px 28px color-mix(in srgb, var(--color-ink) 14%, transparent),
+    0 2px 6px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.35s ease;
+}
+
+.solve-pair-icon:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 70%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, var(--color-ink) 10%, transparent),
+    0 18px 34px color-mix(in srgb, var(--color-ink) 16%, transparent),
+    0 3px 8px color-mix(in srgb, var(--color-ink) 10%, transparent);
+}
+
+.solve-pair-icon-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+}
+
 .solve-pair-stack {
   display: flex;
   flex-wrap: wrap;
@@ -2425,6 +2463,12 @@ textarea:focus-visible {
   .solve-pair.is-in .solve-pair-arrow {
     animation: none;
   }
+
+  .solve-pair-icon,
+  .solve-pair-icon:hover {
+    transform: none;
+    transition: none;
+  }
 }
 
 /* Solve detail — one app / solution */
@@ -2512,6 +2556,28 @@ textarea:focus-visible {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.solve-detail-icon {
+  margin: 0;
+  width: clamp(6.25rem, 30vw, 8.5rem);
+  aspect-ratio: 1;
+  border-radius: 22.5%;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-field) 90%, white);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, white 70%, transparent),
+    inset 0 -1px 1px color-mix(in srgb, var(--color-ink) 10%, transparent),
+    0 16px 32px color-mix(in srgb, var(--color-ink) 14%, transparent),
+    0 2px 6px color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+
+.solve-detail-icon-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
 }
 
 .solve-detail-body {
