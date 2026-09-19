@@ -1,73 +1,114 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import Image from "next/image";
 import type { Recording } from "@/lib/types";
-import { vimeoId, youtubeId } from "@/lib/media";
 
-export function RecordingPlayer({ recordings }: { recordings: Recording[] }) {
-  const [active, setActive] = useState(0);
-  const current = recordings[active];
-  const yt = useMemo(() => (current ? youtubeId(current.url) : null), [current]);
-  const vm = useMemo(() => (current ? vimeoId(current.url) : null), [current]);
+function shortServiceLabel(label: string) {
+  // "9:00 AM" → "9:00"; keep as-is when already short.
+  return label.replace(/\s*(AM|PM)\s*$/i, "").trim() || label;
+}
 
+export function RecordingPlayer({
+  recordings,
+  title,
+}: {
+  recordings: Recording[];
+  title: string;
+}) {
   if (recordings.length === 0) return null;
 
-  return (
-    <div className="mt-10 space-y-4">
-      {recordings.length > 1 ? (
-        <div role="tablist" aria-label="Recordings" className="flex flex-wrap gap-2">
-          {recordings.map((recording, index) => (
-            <button
-              key={`${recording.label}-${index}`}
-              type="button"
-              role="tab"
-              aria-selected={index === active}
-              onClick={() => setActive(index)}
-              className={`border px-4 py-2 font-ui text-sm ${
-                index === active
-                  ? "border-ink bg-ink text-study"
-                  : "border-ink/20 hover:border-accent"
-              }`}
-            >
-              {recording.label}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <p className="font-ui text-sm text-ink/60">{recordings[0].label}</p>
-      )}
+  const showLabels = recordings.length > 1;
 
-      {current.source === "youtube" && yt ? (
-        <div className="aspect-video w-full overflow-hidden bg-ink">
-          <iframe
-            title={current.label}
-            src={`https://www.youtube-nocookie.com/embed/${yt}`}
-            className="h-full w-full"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      ) : current.source === "vimeo" && vm ? (
-        <div className="aspect-video w-full overflow-hidden bg-ink">
-          <iframe
-            title={current.label}
-            src={`https://player.vimeo.com/video/${vm}`}
-            className="h-full w-full"
-            allow="autoplay; fullscreen; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      ) : current.source === "audio" ? (
-        <audio controls className="w-full" src={current.url}>
-          <a href={current.url}>{current.label}</a>
-        </audio>
-      ) : (
-        <p>
-          <a className="underline decoration-accent underline-offset-4" href={current.url}>
-            Open {current.label}
-          </a>
-        </p>
-      )}
-    </div>
+  return (
+    <section className="mt-10 border-y border-ink/15 py-6" aria-label="Watch recordings">
+      <div
+        className={
+          recordings.length > 1
+            ? "grid gap-5 sm:grid-cols-2 sm:gap-4"
+            : "mx-auto w-full max-w-2xl"
+        }
+      >
+        {recordings.map((recording, index) => {
+          const key = `${recording.label}-${index}`;
+          const label = showLabels ? shortServiceLabel(recording.label) : null;
+          const alt = label
+            ? `Still from ${title} — ${recording.label}`
+            : `Still from ${title}`;
+
+          if (!recording.url) {
+            return (
+              <div
+                key={key}
+                className="border border-dashed border-ink/20 px-5 py-8"
+              >
+                {label ? (
+                  <p className="mb-2 font-ui text-xs tracking-[0.16em] text-ink/45 uppercase">
+                    {label}
+                  </p>
+                ) : null}
+                <p className="font-display text-2xl">Recording forthcoming</p>
+                <p className="mt-1 font-ui text-sm text-ink/55">
+                  This service has a place here; its recording has not been published yet.
+                </p>
+              </div>
+            );
+          }
+
+          const still = recording.image ? (
+            <div className="relative aspect-video w-full overflow-hidden bg-ink ring-1 ring-ink/10">
+              <Image
+                src={recording.image}
+                alt={alt}
+                fill
+                className="object-cover transition duration-300 group-hover:scale-[1.02]"
+                sizes={
+                  recordings.length > 1
+                    ? "(max-width: 639px) 100vw, 50vw"
+                    : "(max-width: 767px) 100vw, 42rem"
+                }
+                priority={index === 0}
+              />
+              <span
+                className="pointer-events-none absolute inset-0 bg-ink/0 transition group-hover:bg-ink/10"
+                aria-hidden
+              />
+              <span
+                className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                aria-hidden
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-full bg-study/90 text-ink shadow-sm ring-1 ring-ink/10 transition group-hover:scale-105 sm:h-14 sm:w-14">
+                  <svg viewBox="0 0 24 24" className="ml-0.5 h-5 w-5 fill-current" aria-hidden>
+                    <path d="M8 5.14v13.72L19 12 8 5.14z" />
+                  </svg>
+                </span>
+              </span>
+            </div>
+          ) : (
+            <div className="flex aspect-video w-full items-center justify-center border border-ink/15 bg-ink/[0.04]">
+              <span className="font-ui text-sm tracking-[0.12em] text-ink/50 uppercase">
+                Watch on {recording.source === "youtube" ? "YouTube" : "video"}
+              </span>
+            </div>
+          );
+
+          return (
+            <a
+              key={key}
+              href={recording.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group block focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+            >
+              {still}
+              {label ? (
+                <p className="mt-2 font-ui text-xs tracking-[0.16em] text-ink/50 uppercase">
+                  {label}
+                </p>
+              ) : (
+                <span className="sr-only">Watch {title} on YouTube</span>
+              )}
+            </a>
+          );
+        })}
+      </div>
+    </section>
   );
 }

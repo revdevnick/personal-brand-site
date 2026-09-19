@@ -1,30 +1,48 @@
 import type { MetadataRoute } from "next";
 import { getSermons, getWritings } from "@/lib/content";
+import { LISTEN_FORMAT_FLAGS } from "@/lib/listen-formats";
+import { READ_FORMAT_FLAGS } from "@/lib/read-formats";
 import { site } from "@/lib/site";
 
 export const dynamic = "force-static";
 export const revalidate = false;
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const staticRoutes = ["", "/sermons/", "/writing/", "/about/", "/work/", "/contact/"].map(
-    (path) => ({
-      url: `${site.url}${path}`,
-      lastModified: new Date(),
-    }),
-  );
+  const readFormatRoutes = [
+    READ_FORMAT_FLAGS.resources ? "/read/resources/" : null,
+    READ_FORMAT_FLAGS.publications ? "/read/publications/" : null,
+  ].filter((path): path is string => Boolean(path));
+
+  const listenFormatRoutes = [
+    LISTEN_FORMAT_FLAGS.appearances ? "/listen/appearances/" : null,
+  ].filter((path): path is string => Boolean(path));
+
+  const staticRoutes = [
+    "",
+    "/listen/",
+    ...listenFormatRoutes,
+    "/read/",
+    ...readFormatRoutes,
+    "/about/",
+    "/solve/",
+    "/contact/",
+  ].map((path) => ({
+    url: `${site.url}${path}`,
+    lastModified: new Date(),
+  }));
 
   const sermons = getSermons().map((sermon) => ({
-    url: `${site.url}/sermons/${sermon.slug}/`,
+    url: `${site.url}/listen/${sermon.slug}/`,
     lastModified: new Date(sermon.date),
   }));
 
   const writings = getWritings().map((post) => ({
-    url: `${site.url}/writing/${post.slug}/`,
+    url: `${site.url}/read/${post.slug}/`,
     lastModified: new Date(post.date),
   }));
 
   const tags = ["faith", "tech", "ai", "engineering", "life"].map((tag) => ({
-    url: `${site.url}/writing/tags/${tag}/`,
+    url: `${site.url}/read/tags/${tag}/`,
     lastModified: new Date(),
   }));
 

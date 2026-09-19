@@ -630,6 +630,17 @@ textarea:focus-visible {
   outline-offset: 3px;
 }
 
+/* Archive search: one ring on the shell via :focus-within — not a nested input outline. */
+.archive-search-field:focus-within {
+  border-color: var(--color-accent);
+}
+
+.archive-search-field input:focus,
+.archive-search-field input:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+
 .magnetic {
   display: inline-block;
 }
@@ -1981,4 +1992,449 @@ textarea:focus-visible {
     font-size: 1.2rem;
   }
 }
+
+/* ── Solve: problem → solution pairs (not agency case studies) ── */
+
+.solve-page {
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  padding-bottom: 4rem;
+  background:
+    radial-gradient(ellipse 70% 40% at 8% 0%, color-mix(in srgb, var(--color-paper) 28%, transparent), transparent 55%),
+    radial-gradient(ellipse 55% 35% at 92% 18%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 50%),
+    var(--color-study);
+}
+
+.solve-page::before {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.35;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--color-ink) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-ink) 6%, transparent) 1px, transparent 1px);
+  background-size: 4.5rem 4.5rem;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.55), transparent 70%);
+}
+
+.solve-hero,
+.solve-pairs,
+.solve-foot {
+  position: relative;
+  z-index: 1;
+}
+
+.solve-hero {
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 4.5rem var(--page-gutter) 3rem;
+}
+
+.solve-hero-kicker {
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+}
+
+.solve-hero-title {
+  margin-top: 1.25rem;
+  max-width: 18ch;
+  font-family: var(--font-display), serif;
+  font-size: clamp(3.4rem, 9vw, 7rem);
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+}
+
+.solve-hero-line {
+  display: block;
+}
+
+.solve-hero-line--accent {
+  color: color-mix(in srgb, var(--color-ink) 55%, var(--color-accent));
+}
+
+.solve-hero-lede {
+  margin-top: 1.75rem;
+  max-width: 32rem;
+  font-size: 1.15rem;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--color-ink) 68%, transparent);
+}
+
+.solve-pairs {
+  margin: 0 auto;
+  max-width: 72rem;
+  padding: 0 var(--page-gutter);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.solve-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 16%, transparent);
+  background: color-mix(in srgb, var(--color-study) 88%, white);
+}
+
+@media (min-width: 900px) {
+  .solve-pair {
+    grid-template-columns: minmax(0, 1.15fr) 2.5rem minmax(0, 1fr);
+    min-height: 22rem;
+  }
+
+  .solve-pair--flip {
+    grid-template-columns: minmax(0, 1fr) 2.5rem minmax(0, 1.15fr);
+  }
+
+  .solve-pair--flip .solve-pair-problem {
+    order: 3;
+  }
+
+  .solve-pair--flip .solve-pair-bridge {
+    order: 2;
+  }
+
+  .solve-pair--flip .solve-pair-answer {
+    order: 1;
+  }
+}
+
+.solve-pair-problem,
+.solve-pair-answer {
+  padding: 2rem 1.5rem 2.25rem;
+}
+
+@media (min-width: 640px) {
+  .solve-pair-problem,
+  .solve-pair-answer {
+    padding: 2.75rem 2.25rem 3rem;
+  }
+}
+
+.solve-pair-problem {
+  position: relative;
+  background:
+    linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--color-ink) 6%, transparent),
+      transparent 55%
+    );
+}
+
+.solve-pair-index {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.25rem;
+  font-family: var(--font-display), serif;
+  font-size: clamp(3.5rem, 8vw, 5.5rem);
+  line-height: 0.8;
+  letter-spacing: -0.04em;
+  color: color-mix(in srgb, var(--color-ink) 8%, transparent);
+  pointer-events: none;
+  user-select: none;
+}
+
+.solve-pair-problem-text {
+  position: relative;
+  margin-top: 0.35rem;
+  max-width: 22ch;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.65rem, 3.4vw, 2.55rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
+}
+
+.solve-pair-problem-text::before {
+  content: "“";
+  position: absolute;
+  left: -0.35em;
+  top: -0.15em;
+  font-size: 1.35em;
+  line-height: 1;
+  color: var(--color-scripture);
+  opacity: 0.85;
+}
+
+.solve-pair-bridge {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--color-ink) 4%, transparent);
+  border-inline: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+}
+
+@media (min-width: 900px) {
+  .solve-pair-bridge {
+    display: flex;
+  }
+}
+
+.solve-pair-arrow {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.95rem;
+  color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+  transform: translateY(0);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.solve-pair.is-in .solve-pair-arrow {
+  animation: solve-arrow-nudge 1.8s ease-in-out 0.35s 1;
+}
+
+.solve-pair-answer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 10%, transparent);
+}
+
+@media (min-width: 900px) {
+  .solve-pair-answer {
+    border-top: 0;
+  }
+}
+
+.solve-pair-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-ink) 48%, transparent);
+}
+
+.solve-pair-meta-dot {
+  opacity: 0.55;
+}
+
+.solve-pair-title {
+  margin-top: 0.85rem;
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.2rem, 4.5vw, 3.4rem);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+
+.solve-pair-solution {
+  margin-top: 1rem;
+  max-width: 34ch;
+  font-size: 1.05rem;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--color-ink) 72%, transparent);
+}
+
+.solve-pair-frame {
+  margin-top: 1.5rem;
+  max-width: 22rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-ink) 14%, transparent);
+  background: var(--color-field);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--color-ink) 12%, transparent);
+}
+
+.solve-pair-frame-chrome {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.55rem 0.7rem;
+  background: color-mix(in srgb, var(--color-field) 92%, white);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-study) 18%, transparent);
+}
+
+.solve-pair-frame-chrome span {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-study) 35%, transparent);
+}
+
+.solve-pair-frame-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+}
+
+.solve-pair-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  margin-top: 1.35rem;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
+
+.solve-pair-stack li {
+  border-left: 1px solid var(--color-scripture);
+  padding-left: 0.55rem;
+}
+
+.solve-pair-note {
+  margin-top: 1rem;
+  max-width: 36ch;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
+
+.solve-pair-link {
+  margin-top: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  width: fit-content;
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  transition: color 0.2s ease, gap 0.25s ease;
+}
+
+.solve-pair-link:hover {
+  color: var(--color-ink);
+  gap: 0.7rem;
+}
+
+.solve-pair-problem-text,
+.solve-pair-answer > * {
+  opacity: 0;
+  transform: translateY(0.85rem);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.solve-pair.is-in .solve-pair-problem-text {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.08s;
+}
+
+.solve-pair.is-in .solve-pair-answer > *:nth-child(1) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.18s;
+}
+.solve-pair.is-in .solve-pair-answer > *:nth-child(2) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.28s;
+}
+.solve-pair.is-in .solve-pair-answer > *:nth-child(3) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.36s;
+}
+.solve-pair.is-in .solve-pair-answer > *:nth-child(4) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.44s;
+}
+.solve-pair.is-in .solve-pair-answer > *:nth-child(5) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.5s;
+}
+.solve-pair.is-in .solve-pair-answer > *:nth-child(6) {
+  opacity: 1;
+  transform: none;
+  transition-delay: 0.56s;
+}
+
+.solve-pair-index {
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.solve-pair.is-in .solve-pair-index {
+  opacity: 1;
+  transition-delay: 0.05s;
+}
+
+@keyframes solve-arrow-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  40% {
+    transform: translateX(0.35rem);
+  }
+  70% {
+    transform: translateX(-0.1rem);
+  }
+}
+
+.solve-foot {
+  margin: 3.5rem auto 0;
+  max-width: 36rem;
+  padding: 0 var(--page-gutter);
+  font-family: var(--font-ui), sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .solve-pair-problem-text,
+  .solve-pair-answer > *,
+  .solve-pair-ask,
+  .solve-pair-index {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .solve-pair.is-in .solve-pair-arrow {
+    animation: none;
+  }
+}
+
+/* Format tab archive skeleton (Listen / Read) */
+.format-skel-bone {
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--color-ink) 9%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes format-skel-breathe {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.48;
+    }
+  }
+
+  .format-skel-bone {
+    animation: format-skel-breathe 1.25s ease-in-out infinite;
+  }
+}
+
 

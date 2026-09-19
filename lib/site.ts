@@ -1,7 +1,7 @@
 export const site = {
   name: "Nick Perkins",
   handle: "RevDevNick",
-  title: "Nick Perkins — Pastor, Writer, Builder",
+  title: "Nick Perkins — Reverend, Developer, Beloved by God",
   description:
     "Associate Pastor of Administration & Engagement at Bethlehem Baptist Church. A doorway to the Word, to Jesus, and to technical work in His service.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://nickperkins.dev",

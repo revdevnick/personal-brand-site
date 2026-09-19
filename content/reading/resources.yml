@@ -1,0 +1,21 @@
+# Helpful resources Nick recommends (his or others’).
+# Structure demo — replace with real links when ready. url is optional.
+entries:
+  - slug: gospel-centered-work
+    title: "Gospel-Centered Work"
+    date: 2025-09-12
+    author: "Various"
+    source: "Sample resource list"
+    excerpt: "A placeholder for books, essays, and tools Nick points people toward. Swap in a real URL when the list is ready."
+    topics:
+      - Work
+      - Calling
+  - slug: praying-with-the-psalms
+    title: "Praying with the Psalms"
+    date: 2025-06-03
+    author: "Nick Perkins"
+    source: "Personal notes"
+    excerpt: "Structure sample for a resource Nick authored himself. Optional external link can be added later."
+    topics:
+      - Prayer
+      - Scripture

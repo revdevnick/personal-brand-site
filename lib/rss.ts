@@ -14,13 +14,13 @@ export function buildRssXml(sermons: Sermon[], writings: Writing[]) {
     ...sermons.map((sermon) => ({
       title: sermon.title,
       date: sermon.date,
-      url: `${site.url}/sermons/${sermon.slug}/`,
-      description: sermon.excerpt ?? sermon.scripture ?? sermon.venue,
+      url: `${site.url}/listen/${sermon.slug}/`,
+      description: sermon.excerpt ?? sermon.passage ?? sermon.venue,
     })),
     ...writings.map((post) => ({
       title: post.title,
       date: post.date,
-      url: `${site.url}/writing/${post.slug}/`,
+      url: `${site.url}/read/${post.slug}/`,
       description: post.excerpt,
     })),
   ].sort((a, b) => b.date.localeCompare(a.date));

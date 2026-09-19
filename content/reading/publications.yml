@@ -1,0 +1,13 @@
+# Publications = writing published elsewhere (guest posts, magazines, church
+# materials, newsletters, and other off-site articles). Not on-site essays.
+# Structure demo — light placeholders only; omit url until a real link exists.
+entries:
+  - slug: church-newsletter-note
+    title: "A short note for the church family"
+    date: 2025-10-01
+    author: "Nick Perkins"
+    source: "Bethlehem Baptist Church"
+    excerpt: "Placeholder for a piece written for another outlet. Add the public URL when it should open off-site."
+    topics:
+      - Church
+      - Faith

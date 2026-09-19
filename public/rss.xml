@@ -1,22 +1,92 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Nick Perkins — Pastor, Writer, Builder</title>
-    <link>http://localhost:3000</link>
+    <title>Nick Perkins — Reverend, Developer, Beloved by God</title>
+    <link>https://nickperkins.dev</link>
     <description>A doorway to the Word, to Jesus, and to technical work in His service.</description>
     <item>
-      <title>The problems I cannot compile</title>
-      <link>http://localhost:3000/sermons/2026-04-12-the-problems-i-cannot-compile/</link>
-      <guid>http://localhost:3000/sermons/2026-04-12-the-problems-i-cannot-compile/</guid>
-      <pubDate>Sun, 12 Apr 2026 00:00:00 GMT</pubDate>
-      <description>Some problems take code. The deepest ones take Jesus.</description>
-    </item>
-    <item>
       <title>I am not Mr. Fix-It</title>
-      <link>http://localhost:3000/writing/2026-04-20-i-am-not-mr-fix-it/</link>
-      <guid>http://localhost:3000/writing/2026-04-20-i-am-not-mr-fix-it/</guid>
+      <link>https://nickperkins.dev/read/2026-04-20-i-am-not-mr-fix-it/</link>
+      <guid>https://nickperkins.dev/read/2026-04-20-i-am-not-mr-fix-it/</guid>
       <pubDate>Mon, 20 Apr 2026 00:00:00 GMT</pubDate>
       <description>I love solving problems. That is not the same as being the one who saves.</description>
+    </item>
+    <item>
+      <title>There's Good, And There's Best</title>
+      <link>https://nickperkins.dev/listen/2026-09-06-theres-good-and-theres-best/</link>
+      <guid>https://nickperkins.dev/listen/2026-09-06-theres-good-and-theres-best/</guid>
+      <pubDate>Sun, 06 Sep 2026 00:00:00 GMT</pubDate>
+      <description>The Spirit closes Asia and Bithynia — good doors, not wrong ones — so Paul can receive Macedonia. Good is not always best.</description>
+    </item>
+    <item>
+      <title>What's Stopping You?</title>
+      <link>https://nickperkins.dev/listen/2026-05-31-whats-stopping-you/</link>
+      <guid>https://nickperkins.dev/listen/2026-05-31-whats-stopping-you/</guid>
+      <pubDate>Sun, 31 May 2026 00:00:00 GMT</pubDate>
+      <description>The Spirit sends Philip to a desert road — and he rose and went. God is already drawing someone who cannot yet see Jesus in Isaiah.</description>
+    </item>
+    <item>
+      <title>Anyone Devoted, Many Will Believe</title>
+      <link>https://nickperkins.dev/listen/2026-06-14-anyone-devoted-many-will-believe/</link>
+      <guid>https://nickperkins.dev/listen/2026-06-14-anyone-devoted-many-will-believe/</guid>
+      <pubDate>Sun, 14 Jun 2026 00:00:00 GMT</pubDate>
+      <description>The kingdom advances through anyone devoted to Jesus — not through the credentials they carry. From Damascus to Joppa, devotion leaves a trail of belief.</description>
+    </item>
+    <item>
+      <title>Keep Moving Forward in Faith</title>
+      <link>https://nickperkins.dev/listen/2025-01-26-keep-moving-forward-in-faith/</link>
+      <guid>https://nickperkins.dev/listen/2025-01-26-keep-moving-forward-in-faith/</guid>
+      <pubDate>Sun, 26 Jan 2025 00:00:00 GMT</pubDate>
+      <description>In 2 Peter 1:1–11, believers stand equal by Christ's righteousness — already given everything for life and godliness — and are called to grow faith into love so calling is confirmed and entrance into the eternal kingdom richly provided.</description>
+    </item>
+    <item>
+      <title>Learning The Rhythm</title>
+      <link>https://nickperkins.dev/listen/2026-03-01-learning-the-rhythm/</link>
+      <guid>https://nickperkins.dev/listen/2026-03-01-learning-the-rhythm/</guid>
+      <pubDate>Sun, 01 Mar 2026 00:00:00 GMT</pubDate>
+      <description>After mission and grief, Jesus draws weary disciples aside — not away from the work forever, but into a rhythm that can sustain it.</description>
+    </item>
+    <item>
+      <title>Anxiety Hates This Sermon: From Panic to Praise</title>
+      <link>https://nickperkins.dev/listen/2025-02-09-anxiety-hates-this-sermon-from-panic-to-praise/</link>
+      <guid>https://nickperkins.dev/listen/2025-02-09-anxiety-hates-this-sermon-from-panic-to-praise/</guid>
+      <pubDate>Sun, 09 Feb 2025 00:00:00 GMT</pubDate>
+      <description>Faced with a coalition too vast to fight, Jehoshaphat turns Judah to fasting and prayer — eyes on the Lord when they do not know what to do — and hears that the battle is not theirs but God's.</description>
+    </item>
+    <item>
+      <title>Day of Diaspora: From Yall Come to We Go</title>
+      <link>https://nickperkins.dev/listen/2026-08-02-day-of-diaspora-from-yall-come-to-we-go/</link>
+      <guid>https://nickperkins.dev/listen/2026-08-02-day-of-diaspora-from-yall-come-to-we-go/</guid>
+      <pubDate>Sun, 02 Aug 2026 00:00:00 GMT</pubDate>
+      <description>Acts 14 is a Day of Diaspora — Antioch sends, God opens the door of faith, and the church learns that Christ builds not only by gathering but by going.</description>
+    </item>
+    <item>
+      <title>We Cannot But Pray</title>
+      <link>https://nickperkins.dev/listen/2026-04-19-we-cannot-but-pray/</link>
+      <guid>https://nickperkins.dev/listen/2026-04-19-we-cannot-but-pray/</guid>
+      <pubDate>Sun, 19 Apr 2026 00:00:00 GMT</pubDate>
+      <description>Released and threatened, they do not scatter into strategy — they run to their own and lift one voice to the Sovereign Lord.</description>
+    </item>
+    <item>
+      <title>We Cannot But Speak</title>
+      <link>https://nickperkins.dev/listen/2026-04-12-we-cannot-but-speak/</link>
+      <guid>https://nickperkins.dev/listen/2026-04-12-we-cannot-but-speak/</guid>
+      <pubDate>Sun, 12 Apr 2026 00:00:00 GMT</pubDate>
+      <description>The council sees ordinary men and cannot explain them — except that they had been with Jesus. What they have seen and heard will not stay quiet.</description>
+    </item>
+    <item>
+      <title>Who Stands Fast?</title>
+      <link>https://nickperkins.dev/listen/2025-11-16-who-stands-fast/</link>
+      <guid>https://nickperkins.dev/listen/2025-11-16-who-stands-fast/</guid>
+      <pubDate>Sun, 16 Nov 2025 00:00:00 GMT</pubDate>
+      <description>Hebrews 10:32–39 calls the church back to the days after they were enlightened — when they endured reproach and loss for a better possession — and urges them not to throw away their confidence, but to endure until the Coming One.</description>
+    </item>
+    <item>
+      <title>A Life of Praise</title>
+      <link>https://nickperkins.dev/listen/2025-05-09-a-life-of-praise/</link>
+      <guid>https://nickperkins.dev/listen/2025-05-09-a-life-of-praise/</guid>
+      <pubDate>Fri, 09 May 2025 00:00:00 GMT</pubDate>
+      <description>David's final recorded psalm — and the only one titled a Song of Praise — walks A to Z through the greatness of God. It resets despair, anxiety, and apathy with God-centered awe, and invites a life that answers His majesty with praise.</description>
     </item>
   </channel>
 </rss>

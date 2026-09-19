@@ -1,0 +1,40 @@
+# Problem → solution entries for /solve/.
+# Add a new entry under `entries:` — no code changes required.
+# Required: slug, title, problem, solution, type, date.
+# Optional: url, image (public path), stack, order, note.
+# Story Rocket does not belong here.
+entries:
+  - slug: scoreboardtv
+    title: ScoreboardTV
+    problem: Families and coaches needed a live scoreboard they could run from a phone while the gym watched on a TV.
+    solution: A native iOS controller paired with an Apple TV board — phone runs the game, the room sees the score.
+    type: app
+    date: 2024
+    stack:
+      - Swift
+      - tvOS
+      - iOS
+    order: 1
+
+  - slug: b4ufly-kittyhawk
+    title: B4UFLY and Kittyhawk
+    problem: Drone pilots needed to understand airspace and fly compliantly, including the app named in FAA materials.
+    solution: Maps, regulations, and mobile tooling for drone operations — Air Control early on, then B4UFLY for the public.
+    type: app
+    date: 2016
+    stack:
+      - Swift
+      - Maps
+      - Aviation
+    order: 2
+
+  - slug: food-genie
+    title: Food Genie
+    problem: People who could not decide where to eat needed an unbiased third party, not another list.
+    solution: A small wheel of nearby places — first a web tool for coworkers, then an iOS app that shipped.
+    type: app
+    date: 2013
+    stack:
+      - Swift
+      - Location
+    order: 3

@@ -1,0 +1,14 @@
+# Guest appearances, interviews, and outings Nick has been on camera for.
+# Add a new entry under `entries:` — no code changes required.
+# Required: slug, title, date (YYYY-MM-DD). Prefer url for the external watch link.
+# Optional: image (or thumbnail) — public path, e.g. /appearances/slug.jpg
+entries:
+  - slug: chandni-chowk-surfing-violinist
+    title: "Chandni Chowk with TheSurfingViolinist"
+    date: 2014-04-01
+    host: "TheSurfingViolinist"
+    venue: "Chandni Chowk, Old Delhi"
+    source: youtube
+    url: "https://www.youtube.com/watch?v=6Dq5NaTbABc"
+    image: /appearances/chandni-chowk-surfing-violinist.jpg
+    excerpt: "While living in India, Nick joined ex-pat YouTuber TheSurfingViolinist for an outing through Chandni Chowk in Old Delhi."

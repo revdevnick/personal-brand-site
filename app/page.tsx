@@ -22,10 +22,10 @@ export default function HomePage() {
             <article className="group">
               <p className="font-ui text-xs tracking-[0.2em] text-accent uppercase">Listen</p>
               <h2 className="mt-4 font-display text-4xl transition-colors group-hover:text-accent sm:text-5xl">
-                <Link href={`/sermons/${sermon.slug}/`}>{sermon.title}</Link>
+                <Link href={`/listen/${sermon.slug}/`}>{sermon.title}</Link>
               </h2>
               <p className="mt-3 font-ui text-sm text-study/60">
-                {sermon.scripture ? `${sermon.scripture} · ` : ""}
+                {sermon.passage ? `${sermon.passage} · ` : ""}
                 {sermon.venue}
               </p>
             </article>
@@ -34,7 +34,7 @@ export default function HomePage() {
             <article className="group">
               <p className="font-ui text-xs tracking-[0.2em] text-accent uppercase">Read</p>
               <h2 className="mt-4 font-display text-4xl transition-colors group-hover:text-accent sm:text-5xl">
-                <Link href={`/writing/${writing.slug}/`}>{writing.title}</Link>
+                <Link href={`/read/${writing.slug}/`}>{writing.title}</Link>
               </h2>
               <p className="mt-3 max-w-md text-study/70">{writing.excerpt}</p>
             </article>

@@ -1148,8 +1148,8 @@ export function Hero() {
           <p className="mt-5 text-4xl text-scripture sm:text-6xl lg:text-7xl">The rest take Jesus.</p>
         </div>
         <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <Link href="/sermons/" className="magnetic door door-loud">Listen</Link>
-          <Link href="/writing/" className="magnetic door door-loud">Read</Link>
+          <Link href="/listen/" className="magnetic door door-loud">Listen</Link>
+          <Link href="/read/" className="magnetic door door-loud">Read</Link>
         </div>
       </section>
     );
@@ -1307,8 +1307,8 @@ error TS2304: Cannot find name 'Peace'.`}
 
           <div data-doors className="story-doors">
             <div className="flex w-[min(92vw,28rem)] flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link href="/sermons/" className="magnetic door door-loud w-full sm:w-auto">Listen</Link>
-              <Link href="/writing/" className="magnetic door door-loud w-full sm:w-auto">Read</Link>
+              <Link href="/listen/" className="magnetic door door-loud w-full sm:w-auto">Listen</Link>
+              <Link href="/read/" className="magnetic door door-loud w-full sm:w-auto">Read</Link>
             </div>
           </div>
         </div>

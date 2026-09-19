@@ -2,9 +2,59 @@ import fs from "node:fs";
 import path from "node:path";
 import matter from "gray-matter";
 import { load as loadYaml } from "js-yaml";
-import type { Experience, Recording, Sermon, WorkCase, Writing, WritingTag } from "./types";
+import { sermonYoutubeStillPath } from "./media";
+import type {
+  Appearance,
+  Experience,
+  ReadLinkEntry,
+  Recording,
+  RecordingSource,
+  Sermon,
+  SolveEntry,
+  Writing,
+  WritingTag,
+} from "./types";
+
+function mapRecording(entry: Record<string, unknown>, sermonSlug: string): Recording {
+  const url = entry.url ? String(entry.url) : undefined;
+  const source = (entry.source ? String(entry.source) : "other") as RecordingSource;
+  const imageRaw = entry.image ?? entry.thumbnail;
+  let image = imageRaw ? String(imageRaw) : undefined;
+  if (!image && url && source === "youtube") {
+    const convention = sermonYoutubeStillPath(sermonSlug, url);
+    if (convention) {
+      const disk = path.join(process.cwd(), "public", convention.replace(/^\//, ""));
+      if (fs.existsSync(disk)) image = convention;
+    }
+  }
+  return {
+    label: String(entry.label ?? "Recording"),
+    url,
+    source,
+    duration: entry.duration ? String(entry.duration) : undefined,
+    image,
+  };
+}
 
 const root = path.join(process.cwd(), "content");
+
+/** Normalize gray-matter / js-yaml Date objects to YYYY-MM-DD for stable sort + display. */
+function asDateString(value: unknown): string {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (/^\d{4}(-\d{2}){0,2}$/.test(trimmed)) return trimmed;
+    const parsed = new Date(trimmed);
+    if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+    return trimmed;
+  }
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return new Date(value).toISOString().slice(0, 10);
+  }
+  return String(value ?? "");
+}
 
 function readDir(dir: string) {
   const full = path.join(root, dir);
@@ -24,17 +74,45 @@ function byDateDesc<T extends { date: string }>(items: T[]) {
   return [...items].sort((a, b) => b.date.localeCompare(a.date));
 }
 
+function readLinkCollection(file: string): ReadLinkEntry[] {
+  const full = path.join(root, "reading", file);
+  if (!fs.existsSync(full)) return [];
+  const raw = fs.readFileSync(full, "utf8");
+  const parsed = loadYaml(raw) as { entries?: Record<string, unknown>[] };
+  const items = (parsed.entries ?? []).map((entry) => ({
+    slug: String(entry.slug),
+    title: String(entry.title),
+    date: asDateString(entry.date),
+    excerpt: entry.excerpt ? String(entry.excerpt) : undefined,
+    author: entry.author ? String(entry.author) : undefined,
+    source: entry.source ? String(entry.source) : undefined,
+    url: entry.url ? String(entry.url) : undefined,
+    topics: Array.isArray(entry.topics) ? entry.topics.map(String) : undefined,
+    body: entry.body ? String(entry.body) : undefined,
+  }));
+  return byDateDesc(items);
+}
+
 export function getSermons(): Sermon[] {
   const items = readDir("sermons").map(({ slug, data, body }) => ({
     slug,
     title: String(data.title),
-    date: String(data.date),
+    date: asDateString(data.date),
     venue: String(data.venue),
     location: data.location ? String(data.location) : undefined,
     series: data.series ? String(data.series) : undefined,
-    scripture: data.scripture ? String(data.scripture) : undefined,
+    // `scripture` remains a read fallback for older entries; `passage` is canonical.
+    passage: data.passage
+      ? String(data.passage)
+      : data.scripture
+        ? String(data.scripture)
+        : undefined,
+    topics: Array.isArray(data.topics) ? data.topics.map(String) : undefined,
+    bibleBook: data.bibleBook ? String(data.bibleBook) : undefined,
     excerpt: data.excerpt ? String(data.excerpt) : undefined,
-    recordings: (Array.isArray(data.recordings) ? data.recordings : []) as Recording[],
+    recordings: (Array.isArray(data.recordings) ? data.recordings : []).map((entry) =>
+      mapRecording((entry ?? {}) as Record<string, unknown>, slug),
+    ),
     body,
   }));
   return byDateDesc(items);
@@ -48,7 +126,7 @@ export function getWritings(): Writing[] {
   const items = readDir("writing").map(({ slug, data, body }) => ({
     slug,
     title: String(data.title),
-    date: String(data.date),
+    date: asDateString(data.date),
     tags: (Array.isArray(data.tags) ? data.tags : []) as WritingTag[],
     excerpt: String(data.excerpt ?? ""),
     body,
@@ -60,19 +138,68 @@ export function getWriting(slug: string) {
   return getWritings().find((item) => item.slug === slug);
 }
 
-export function getWork(): WorkCase[] {
-  return readDir("work")
-    .map(({ slug, data, body }) => ({
-      slug,
-      title: String(data.title),
-      problem: String(data.problem),
-      craft: String(data.craft),
-      url: data.url ? String(data.url) : undefined,
-      parent: data.parent ? String(data.parent) : undefined,
-      order: Number(data.order ?? 99),
-      body,
-    }))
-    .sort((a, b) => a.order - b.order);
+export function getResources(): ReadLinkEntry[] {
+  return readLinkCollection("resources.yml");
+}
+
+export function getPublications(): ReadLinkEntry[] {
+  return readLinkCollection("publications.yml");
+}
+
+export function getAppearances(): Appearance[] {
+  const full = path.join(root, "listening", "appearances.yml");
+  if (!fs.existsSync(full)) return [];
+  const raw = fs.readFileSync(full, "utf8");
+  const parsed = loadYaml(raw) as { entries?: Record<string, unknown>[] };
+  const items = (parsed.entries ?? []).map((entry) => {
+    const imageRaw = entry.image ?? entry.thumbnail;
+    return {
+      slug: String(entry.slug),
+      title: String(entry.title),
+      date: asDateString(entry.date),
+      excerpt: entry.excerpt ? String(entry.excerpt) : undefined,
+      host: entry.host ? String(entry.host) : undefined,
+      venue: entry.venue ? String(entry.venue) : undefined,
+      url: entry.url ? String(entry.url) : undefined,
+      source: entry.source ? (String(entry.source) as RecordingSource) : undefined,
+      duration: entry.duration ? String(entry.duration) : undefined,
+      image: imageRaw ? String(imageRaw) : undefined,
+    };
+  });
+  return byDateDesc(items);
+}
+
+export function getSolveEntries(): SolveEntry[] {
+  const full = path.join(root, "solving", "entries.yml");
+  if (!fs.existsSync(full)) return [];
+  const raw = fs.readFileSync(full, "utf8");
+  const parsed = loadYaml(raw) as { entries?: Record<string, unknown>[] };
+  const items = (parsed.entries ?? []).map((entry) => {
+    const stackRaw = entry.stack ?? entry.topics;
+    return {
+      slug: String(entry.slug),
+      title: String(entry.title),
+      problem: String(entry.problem),
+      solution: String(entry.solution),
+      type: String(entry.type ?? "app"),
+      url: entry.url ? String(entry.url) : undefined,
+      image: entry.image ? String(entry.image) : undefined,
+      date: asDateString(entry.date ?? "1970"),
+      stack: Array.isArray(stackRaw) ? stackRaw.map(String) : undefined,
+      order: entry.order !== undefined ? Number(entry.order) : undefined,
+      note: entry.note ? String(entry.note) : undefined,
+    };
+  });
+  return items.sort((a, b) => {
+    const byDate = b.date.localeCompare(a.date);
+    if (byDate !== 0) return byDate;
+    return (a.order ?? 99) - (b.order ?? 99);
+  });
+}
+
+/** @deprecated Prefer getSolveEntries(). */
+export function getWork(): SolveEntry[] {
+  return getSolveEntries();
 }
 
 export function getExperience(): Experience[] {

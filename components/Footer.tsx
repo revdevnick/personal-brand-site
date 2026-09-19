@@ -62,7 +62,7 @@ export function Footer() {
           <span aria-hidden className="site-footer-dot">
             ·
           </span>
-          <span>All about Jesus.</span>
+          <span>ALL TO JESUS, I SURRENDER</span>
         </p>
       </div>
     </footer>

@@ -35,14 +35,14 @@ function readCollection(dir, kind) {
     });
 }
 
-const items = [...readCollection("sermons", "sermons"), ...readCollection("writing", "writing")].sort(
+const items = [...readCollection("sermons", "listen"), ...readCollection("writing", "read")].sort(
   (a, b) => b.date.localeCompare(a.date),
 );
 
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Nick Perkins — Pastor, Writer, Builder</title>
+    <title>Nick Perkins — Reverend, Developer, Beloved by God</title>
     <link>${xmlEscape(siteUrl)}</link>
     <description>A doorway to the Word, to Jesus, and to technical work in His service.</description>
 ${items

@@ -6,9 +6,9 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { BrandLockup } from "./BrandLockup";
 
 const links = [
-  { href: "/sermons/", label: "Listen" },
-  { href: "/writing/", label: "Read" },
-  { href: "/work/", label: "Work" },
+  { href: "/listen/", label: "Listen" },
+  { href: "/read/", label: "Read" },
+  { href: "/solve/", label: "Solve" },
   { href: "/about/", label: "About" },
 ];
 
