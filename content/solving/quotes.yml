@@ -1,0 +1,83 @@
+# Client / collaborator quotes attached to Solve apps.
+# Source: https://nickperkins.dev/#interests (References). Photos in public/solve/quotes/.
+# Mapping is Nick-authoritative (see internal/solve-quotes-import.md).
+quotes:
+  - id: jeffrey-cripe
+    name: Jeffrey Cripe
+    role: iOS Engineer at Kittyhawk.io / Aloft.ai
+    photo: /solve/quotes/jeffrey-cripe.jpg
+    app: kittyhawk-air-control
+    quote: |
+      Nick was a relief to have leading the mobile team for Kittyhawk. He constantly went above and beyond in order to keep the product and the team on track. He wore multiple hats with ease. Any team that has Nick apart of it is a team that is going to be successful
+
+  - id: michael-joyce
+    name: Michael Joyce
+    role: Sole Product Designer at Kittyhawk.io / Aloft.ai
+    photo: /solve/quotes/michael-joyce.jpg
+    app: kittyhawk-air-control
+    quote: |
+      Nick is a rare breed. In my 9+ years of working with developers from various teams, backgrounds and skill sets I’d be hard-pressed to name anyone who is more well suited for team and product leadership than Nick. As a contributor, he’s humble yet confident. Professional, yet funny and likable. Knowledgeable, yet seemingly always curious to learn and grow. Logical and pragmatic, yet extremely creative. And, as a bonus, he has a keen eye for user experience design, while also being quite adept at quickly conceptualizing and sketching up design proposals, when collaborating on product direction. As a leader, he will motivate you through frequent positive reinforcement for what you do well and motivate you to become better by deftly helping you see where you can improve, without making you feel judged or condescended towards. He inspires the people who work with him or for him, as a good leader does. And he leads by example, in the trenches, from the front. He’ll wear as many hats as needed to help a team succeed. Whether it’s voluntarily jumping on QA tasks, delivering quality code, leading his team or having consistent impact within product and strategy meetings with Design, Sales, Customer Success and Stakeholders. Nick shines on many levels.
+
+  - id: hing-tang
+    name: Hing Tang
+    role: Lead Frontend Engineer at Kittyhawk.io / Aloft.ai
+    photo: /solve/quotes/hing-tang.jpg
+    app: kittyhawk-drone-ops
+    quote: |
+      For the past 2 years, I worked directly with Nick on various projects and during that time I appreciated his leadership skills and relaxed personality. Nick is organized, dependable, and a great problem solver. Not to mention he is a team player which makes it very easy to work with him. An example of his leadership was when the Mobile team needed a team lead, Nick stepped up to the plate and assumed the role without hesitation. He provides invaluable feedback with positive reinforcement. Any team is lucky to have a team player like Nick.
+
+  - id: talton-figgins
+    name: Talton Figgins
+    role: Product Manager at Kittyhawk.io/ Aloft.ai
+    photo: /solve/quotes/talton-figgins.jpg
+    app: kittyhawk-drone-ops
+    quote: |
+      It was a pleasure to work along side Nick at Kittyhawk. His wealth of technical and product knowledge was essential to our design and scoping process so that we could deliver impactful features within challenging time constraints. He was critical in leading the technical design of mobile features and guiding the team through a project's completion while continuing to write code, maintain our classic iOS app, and conduct regular QA. The mobile team excelled under his leadership and guidance because of the active role Nick played in making sure he knew all of the details for them to be successful. His ability to listen, provide relevant feedback, and adapt to a changing landscape makes him not only a great member of a team but a great leader who ensures others are able to do their best work.
+
+  - id: richard-jacobsen
+    name: Richard Jacobsen
+    role: Senior Application Developer at Kittyhawk.io / Aloft.ai
+    photo: /solve/quotes/richard-jacobsen.jpg
+    app: kittyhawk-drone-ops
+    quote: |
+      Nick is a very talented developer, and is an even better leader. The time I spent with him was extremely fruitful, and I learned a lot from him. He is very passionate about all he does, and strives to be the best he can be in everything.
+
+  - id: ricky-hopper
+    name: Ricky Hopper
+    role: Technical Lead at PrecisionHawk
+    photo: /solve/quotes/ricky-hopper.jpg
+    app: precisionflight
+    quote: |
+      I had the opportunity to work with Nick on the PrecisionFlight mobile application, and he has contributed to our product and culture in an invaluable way. Nick has made a myriad of contributions to the product, from developing marketing material, creating storyboards for new designs, and automating our release process to improve team productivity. In his role as an iOS developer, Nick has both developed brand new features for our app and helped transform our legacy code into a cleaner and more scalable codebase - all while fixing bugs and improving the product however he could. He has always made sure he could deliver on anything that was expected of him, displaying a powerful work ethic that is difficult to come by. His sense of humor and proclivity for puns always made our team meetings and chats entertaining, and is one of the many things I will miss about him as a member of our team. Nick is a spirited and capable developer that will elevate the performance and spirit of any company.
+
+  - id: josh-puente
+    name: Josh Puente
+    role: Lead iOS Engineer at PrecisionHawk
+    photo: /solve/quotes/josh-puente.jpg
+    app: precisionflight
+    quote: |
+      Since I’ve met Nick I’ve been impressed with his extensive knowledge in iOS development. He is a highly skilled developer and has great debugging skills. It was a great experience to work with you and I enjoyed every time we pair programmed to knock out bugs. I highly recommend Nick to any mobile development team. Wish you the best in your next opportunity man!
+
+  - id: stacey-krug
+    name: Stacey Krug
+    role: Campus Director at The Iron Yard
+    photo: /solve/quotes/stacey-krug.jpg
+    app: food-genie
+    quote: |
+      Nick was an ideal student during his time at The Iron Yard. He was a top performer in class, and always helped his peers without being directly asked to do so. His final project Food Genie was really impressive, and he is the only one from his class to go beyond the program requirements to get it in the App Store. After he graduated, he came back and volunteered his time to teach a few of our free intro classes. Nick is just a great person overall, and I look forward to seeing where his path takes him. If you get a chance to work with him, you’re very lucky!
+
+  - id: jeff-ligon-phd
+    name: Jeff Ligon, PhD
+    role: Mobile Instructor at The Iron Yard
+    photo: /solve/quotes/jeff-ligon-phd.jpg
+    app: forecaster
+    quote: |
+      Nick is an excellent learner and always pushed the UI to do more than what the assignments asked of him. He was customizing TableView Cells before his classmates understood what a protocol was. He's a persistent worker and is constantly looking to learn a new way to solve a problem. His design work on his final project, Food Genie, went above and beyond our expectations.
+
+  - id: tom-williamson
+    name: Tom Williamson
+    role: Programmer at DTS Software
+    photo: /solve/quotes/tom-williamson.jpg
+    app: scc2
+    quote: |
+      I hired Nick to work on our SCC2 iOS app. He did a fantastic job, especially with the UI. He always went above and beyond what I asked him to work on. I will definitely hire Nick in the future to help with other apps.

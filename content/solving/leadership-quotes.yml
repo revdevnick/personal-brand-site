@@ -1,0 +1,43 @@
+# Leadership-in-development quotes (Codesmith era) + unassigned archive.
+# Not forced onto Solve app pages. Photos in public/solve/quotes/.
+# Tags: codesmith | leadership | client | unassigned
+quotes:
+  - id: joey-harris
+    name: Joey Harris
+    role: Former CEO at Codesmith Development, LLC
+    photo: /solve/quotes/joey-harris.jpg
+    tags: [codesmith, leadership]
+    quote: |
+      I hired Nick in 2021 to lead our iOS development team. He was able to grow our mobile processes to exactly where I had hoped he would take it. His ability to understand the details with mobile technology really set him a part and allowed our small team to grow. Soon after hiring Nick, we promoted him to Development Manager where he thrived in lead the charge for our development team processes and procedures. We quickly grew to ~20+ head count that reported under Nick, which was a direct result of his abilities to ensure our customer deliverables were being met. An added benefit was how he invested in each development team member for their professional goals. I would happily hire Nick again for my team any day.
+
+  - id: giancarlo-bianchi
+    name: Giancarlo Bianchi
+    role: Backend Engineer at Codesmith Development, LLC
+    photo: /solve/quotes/giancarlo-bianchi.jpg
+    tags: [codesmith, leadership]
+    quote: |
+      Nick is an exceptional software development manager and iOS developer. His contributions have enabled us to develop highly effective and efficient solutions, delivering reliable, secure, and well-organized products to our clients on time. His expertise in Swift was of paramount importance. Additionally, his proficiency in the deployment process for the App Store and his ability to seamlessly integrate necessary components to meet our client's requirements were invaluable. Nick's skills as a software development manager and iOS developer have unquestionably played a fundamental role in the growth and success of Codesmith.
+
+  - id: mike-martin
+    name: Mike Martin
+    role: Former CMO at Codesmith Development, LLC
+    photo: /solve/quotes/mike-martin.jpg
+    tags: [codesmith, leadership]
+    quote: |
+      Nick was our development manager at Codesmith and I had the pleasure of working with him and watching him manage our team of developers. Nick has a roll-your-sleeves-up attitude where he gets things done. He sees opportunities for improvement, whether that is with operations or with talent, and he is an agent of change. Because he is a talented iOS developer himself, he speaks the language of the development team but he also understands organizational goals and the value of a high-performing team. Nick also has a big heart and genuinely cares about people. He is a family man who has his priorities straight. He is a real asset to any team and I highly recommend him.
+
+  - id: leonardo-toccaceli
+    name: Leonardo Toccaceli
+    role: Frontend Engineer at Codesmith Development, LLC
+    photo: /solve/quotes/leonardo-toccaceli.jpg
+    tags: [codesmith, leadership]
+    quote: |
+      Nick has been an amazing lead for the team showing wisdom and experience from a technical perspective, and empathy and flexibility in his position as a manager. Even more so when he had to lead a remote and distributed team across the globe, showing his kindness and will to make everyone feel part celebrating our cultural differences. He has helped us grow both professionally and personally, he will definitely be a great addition to any team or organization.
+
+  - id: brian-burris
+    name: Brian Burris
+    role: SkyTubeLive.com / Upwork.com Client
+    photo: /solve/quotes/brian-burris.png
+    tags: [client, unassigned]
+    quote: |
+      Nicholas was great to work with in every way. He was extremely communicative and helpful in setting up the scope of the project, and gave regular detailed updates on his progress, made very useful suggestions and independent contributions to its success, and in all ways went above and beyond in our effort. I would highly recommend him and would be very excited to be able to work with him in the future on additional projects.

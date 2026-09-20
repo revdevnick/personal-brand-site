@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { getSolveEntries, getSolveEntry } from "@/lib/content";
+import { getSolveEntries, getSolveEntry, getSolveQuotesForApp } from "@/lib/content";
 import { formatDate } from "@/lib/format";
 import { getSolveGalleryItems } from "@/lib/solve";
 
@@ -38,6 +38,7 @@ export default async function SolveDetailPage({
 
   const typeLabel = entry.type.replace(/^\w/, (c) => c.toUpperCase());
   const gallery = getSolveGalleryItems(entry);
+  const quotes = getSolveQuotesForApp(slug);
 
   const paragraphs = entry.body
     ? entry.body
@@ -66,13 +67,16 @@ export default async function SolveDetailPage({
         <h1 className="solve-detail-title">{entry.title}</h1>
       </header>
 
-      <section className="solve-detail-pair" aria-label="Problem and solution">
-        <div className="solve-detail-problem">
-          <p className="solve-detail-label">Problem</p>
+      <section
+        className="solve-detail-pair"
+        aria-label="Problem and solution"
+      >
+        <div className="solve-detail-blob solve-detail-problem">
+          <h2 className="solve-detail-label">Problem</h2>
           <p className="solve-detail-problem-text">{entry.problem}</p>
         </div>
-        <div className="solve-detail-solution">
-          <p className="solve-detail-label">Solution</p>
+        <div className="solve-detail-blob solve-detail-solution">
+          <h2 className="solve-detail-label">Solution</h2>
           <p className="solve-detail-solution-text">{entry.solution}</p>
         </div>
       </section>
@@ -148,9 +152,12 @@ export default async function SolveDetailPage({
                 href={link.url}
                 target={isExternal(link.url) ? "_blank" : undefined}
                 rel={isExternal(link.url) ? "noopener noreferrer" : undefined}
-                className="solve-pair-link"
+                className="solve-pair-link solve-detail-outbound"
               >
-                {link.label} <span aria-hidden>→</span>
+                <span className="solve-pair-link-label">{link.label}</span>
+                <span className="solve-pair-link-arrow" aria-hidden>
+                  →
+                </span>
               </a>
             </li>
           ))}
@@ -160,18 +167,60 @@ export default async function SolveDetailPage({
                 href={entry.url}
                 target={isExternal(entry.url) ? "_blank" : undefined}
                 rel={isExternal(entry.url) ? "noopener noreferrer" : undefined}
-                className="solve-pair-link"
+                className="solve-pair-link solve-detail-outbound"
               >
-                Open <span aria-hidden>→</span>
+                <span className="solve-pair-link-label">Open</span>
+                <span className="solve-pair-link-arrow" aria-hidden>
+                  →
+                </span>
               </a>
             </li>
           ) : null}
         </ul>
       )}
 
+      {quotes.length > 0 ? (
+        <section className="solve-detail-quotes" aria-label="References">
+          <h2 className="solve-detail-quotes-title">References</h2>
+          <ul className="solve-detail-quote-list">
+            {quotes.map((item) => (
+              <li key={item.id} className="solve-detail-quote">
+                <blockquote className="solve-detail-quote-text">
+                  <p>
+                    <span className="solve-detail-quote-mark" aria-hidden>
+                      “
+                    </span>
+                    {item.quote}
+                    <span className="solve-detail-quote-mark" aria-hidden>
+                      ”
+                    </span>
+                  </p>
+                </blockquote>
+                <footer className="solve-detail-quote-byline">
+                  <Image
+                    src={item.photo}
+                    alt=""
+                    width={72}
+                    height={72}
+                    className="solve-detail-quote-photo"
+                  />
+                  <div className="solve-detail-quote-meta">
+                    <cite className="solve-detail-quote-name">{item.name}</cite>
+                    <p className="solve-detail-quote-role">{item.role}</p>
+                  </div>
+                </footer>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       <p className="solve-detail-back">
         <Link href="/solve/" className="solve-pair-link">
-          ← All problems
+          <span className="solve-pair-link-arrow" aria-hidden>
+            ←
+          </span>
+          <span className="solve-pair-link-label">All problems</span>
         </Link>
       </p>
     </main>

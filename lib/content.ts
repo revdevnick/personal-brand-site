@@ -11,6 +11,7 @@ import type {
   RecordingSource,
   Sermon,
   SolveEntry,
+  SolveQuote,
   Writing,
   WritingTag,
 } from "./types";
@@ -219,6 +220,47 @@ export function getSolveEntries(): SolveEntry[] {
 
 export function getSolveEntry(slug: string): SolveEntry | undefined {
   return getSolveEntries().find((entry) => entry.slug === slug);
+}
+
+function mapSolveQuote(entry: Record<string, unknown>): SolveQuote {
+  const tagsRaw = entry.tags;
+  return {
+    id: String(entry.id),
+    name: String(entry.name),
+    role: String(entry.role ?? ""),
+    quote: String(entry.quote ?? "")
+      .replace(/<br\s*\/?>/gi, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+    photo: String(entry.photo),
+    app: entry.app ? String(entry.app) : undefined,
+    tags: Array.isArray(tagsRaw) ? tagsRaw.map(String) : undefined,
+  };
+}
+
+/** Quotes attached to Solve apps (`content/solving/quotes.yml`). */
+export function getSolveQuotes(): SolveQuote[] {
+  const full = path.join(root, "solving", "quotes.yml");
+  if (!fs.existsSync(full)) return [];
+  const raw = fs.readFileSync(full, "utf8");
+  const parsed = loadYaml(raw) as { quotes?: Record<string, unknown>[] };
+  return (parsed.quotes ?? []).map(mapSolveQuote);
+}
+
+export function getSolveQuotesForApp(slug: string): SolveQuote[] {
+  return getSolveQuotes().filter((quote) => quote.app === slug);
+}
+
+/**
+ * Codesmith / leadership quotes (+ unassigned archive).
+ * Not shown on app detail pages — durable YAML for later use.
+ */
+export function getLeadershipQuotes(): SolveQuote[] {
+  const full = path.join(root, "solving", "leadership-quotes.yml");
+  if (!fs.existsSync(full)) return [];
+  const raw = fs.readFileSync(full, "utf8");
+  const parsed = loadYaml(raw) as { quotes?: Record<string, unknown>[] };
+  return (parsed.quotes ?? []).map(mapSolveQuote);
 }
 
 /** @deprecated Prefer getSolveEntries(). */

@@ -145,6 +145,21 @@ export type SolveEntry = {
   note?: string;
 };
 
+/** Client / collaborator quote attached to a Solve app or archived for leadership. */
+export type SolveQuote = {
+  id: string;
+  name: string;
+  /** Title / company as shown on the old References section. */
+  role: string;
+  quote: string;
+  /** Public path under `/solve/quotes/…` (archived locally — no hotlinks). */
+  photo: string;
+  /** Solve app slug when the quote belongs on a detail page. */
+  app?: string;
+  /** e.g. codesmith, leadership, client, unassigned */
+  tags?: string[];
+};
+
 /** @deprecated Prefer SolveEntry — kept as an alias during the Solve redesign. */
 export type WorkCase = SolveEntry;
 
